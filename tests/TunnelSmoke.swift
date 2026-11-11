@@ -36,7 +36,7 @@ final class TunnelSmoke: NSObject, WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         if checkingFailure { fail("Direct fallback occurred after tunnel stopped"); return }
         webView.evaluateJavaScript("document.body.innerText") { value, error in
-            guard let text = value as? String, text.contains("Example Domain") else { self.fail("Tunnel did not deliver destination content"); return }
+            guard let text = value as? String, text.contains("Example Domain") else { self.fail("Tunnel did not deliver destination content. URL: \(webView.url?.absoluteString ?? "nil") Body: \(String(describing: value)) Error: \(String(describing: error))"); return }
             print("PASS: WebKit HTTPS traffic crossed the authenticated WebSocket tunnel")
             self.checkingFailure = true
             self.bridge.stop()
