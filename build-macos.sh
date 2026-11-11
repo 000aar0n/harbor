@@ -16,8 +16,8 @@ app="$stage/Harbor.app"
 mkdir -p "$app/Contents/MacOS"
 sdk=$(xcrun --sdk macosx --show-sdk-path)
 for arch in arm64 x86_64; do
-  xcrun swiftc Harbor.swift -O -sdk "$sdk" -target "${arch}-apple-macos14.0" \
-    -framework Cocoa -framework WebKit -framework Network \
+  xcrun swiftc Harbor.swift Tunnel.swift TunnelSettings.swift -O -sdk "$sdk" -target "${arch}-apple-macos14.0" \
+    -framework Cocoa -framework WebKit -framework Network -framework Security \
     -o "$stage/Harbor-$arch"
 done
 xcrun lipo -create "$stage/Harbor-arm64" "$stage/Harbor-x86_64" \
@@ -30,7 +30,7 @@ cat > "$app/Contents/Info.plist" <<'PLIST'
 <key>CFBundleIdentifier</key><string>local.harbor.browser</string>
 <key>CFBundleName</key><string>Harbor</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.1.0</string>
+<key>CFBundleShortVersionString</key><string>0.2.0</string>
 <key>CFBundleVersion</key><string>1</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSHighResolutionCapable</key><true/>

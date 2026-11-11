@@ -1,23 +1,30 @@
 # Harbor
 
-A small native Mac browser using Apple WebKit, with an optional HTTP CONNECT proxy connection. Requires macOS 14 or later. Works on Apple Silicon and Intel Macs.
+A native Mac WebKit browser with an encrypted, authenticated US browsing tunnel. Requires macOS 14 or later; supports Apple Silicon and Intel.
 
-## Download
+## Use
 
-Open [Releases](https://github.com/000aar0n/harbor/releases/latest) and download **Harbor-macOS.zip**. Extract it and open **Harbor.app** from your Downloads folder. No local build tools or administrator commands are needed to extract the app. Your Mac may require approval to run it.
+1. Download **Harbor-macOS.zip** from [Releases](https://github.com/000aar0n/harbor/releases/latest), extract it, and open Harbor.app.
+2. Click **Tunnel Setup…** and select your private **Harbor-Connection.json** file. Harbor saves its access key in macOS Keychain. Keep this file private; it grants access to your server.
+3. Click **Connect**. Harbor loads an IP-check page through the tunnel. The status displays your US browsing IP after a successful response.
+4. Browse normally. **Disconnect** explicitly returns to direct browsing and clears the session. Connecting, disconnecting, and importing settings clear session cookies and history.
 
-This preview is ad-hoc signed, not notarized. The download is verified after ZIP extraction during the build. It cannot override Gatekeeper, Santa, or other management policies.
+The tunnel covers HTTP CONNECT web traffic within Harbor and upgrades HTTP navigations to HTTPS. It is not a system VPN, does not affect other applications, and does not provide country selection. It does not claim to tunnel arbitrary UDP or WebRTC traffic. Non-HTTPS sites may not work. WebKit direct proxy failover is disabled: an unavailable tunnel produces a browsing error. The button enables routing; the connected label appears only after a page loads through it.
 
-## Features
+## Server
 
-- Address and search bar, back/forward, reload.
-- Session-only cookies and browsing data.
-- Optional HTTP CONNECT proxy, with automatic direct-connection failover disabled.
+Render runs `server/tunnel.py` with `pip install -r server/requirements.txt` and `python server/tunnel.py`. Set `HARBOR_TOKEN` to a random secret of at least 32 characters. The authenticated `/tunnel` WebSocket forwards binary streams to public destinations on ports 80 and 443. DNS resolves on the server; private, reserved, and link-local destinations are rejected and validated addresses are pinned for connection. No destination or access logs are recorded by the application. Render and destination websites have their own infrastructure logs.
 
-No proxy server or VPN subscription is included. The app does not have a built-in US endpoint, support Chrome/Firefox extensions, or provide a system-wide VPN. Proxy authentication is not implemented. Changing proxy settings clears the browsing session.
+Connection file format (never commit real tokens):
 
-## Build
+```json
+{"endpoint":"wss://YOUR-SERVICE.onrender.com/tunnel","token":"YOUR-PRIVATE-ACCESS-TOKEN-AT-LEAST-32-CHARACTERS"}
+```
 
-On a Mac with Apple developer tools installed, run `bash build-macos.sh`.
+The free Render plan can sleep when idle and take time to wake. Failed requests can be retried without disconnecting. Bandwidth counts toward your Render allowance. Rotate access by replacing `HARBOR_TOKEN` on Render and importing a new connection file.
 
-The GitHub workflow builds both architectures, creates the app metadata, signs the bundle, checks the signature, archives and extracts it, checks the extracted signature, and checks startup on the build Mac. Only a successful build is published as a Release. This does not establish that all browser features or a particular proxy server work; those need separate testing.
+## Build and validation
+
+On macOS, run `bash build-macos.sh`. GitHub Actions builds both architectures, checks signing and packaged startup, exercises actual WebKit HTTPS traffic through the WebSocket server, and verifies that stopping the tunnel blocks subsequent browsing. A successful workflow publishes the app. Server tests: `python3 -m unittest discover -s tests -v` after installing server requirements.
+
+This preview is ad-hoc signed, not notarized. Your Mac may require approval to run it. The app cannot override Gatekeeper or device management policies.

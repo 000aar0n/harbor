@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - Harbor.swift
+      - Tunnel.swift
+      - TunnelSettings.swift
+      - tests/**
+      - server/**
       - build-macos.sh
       - RELEASE_NOTES.md
       - .github/workflows/build-macos.yml
@@ -27,6 +31,22 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build and verify both Mac architectures
         run: bash build-macos.sh
+      - name: Test encrypted browsing and blocked fallback
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv build/test-env
+          build/test-env/bin/pip install -r server/requirements.txt
+          build/test-env/bin/python -m unittest discover -s tests -v
+          HARBOR_TOKEN=test-only-token-not-a-real-secret-123456789 PORT=18765 build/test-env/bin/python server/tunnel.py > build/tunnel.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            if curl -fsS http://127.0.0.1:18765/health; then break; fi
+            sleep 1
+          done
+          xcrun swiftc Tunnel.swift tests/TunnelSmoke.swift -framework Cocoa -framework WebKit -framework Network -o build/tunnel-smoke
+          build/tunnel-smoke
       - name: Check that the packaged app starts
         shell: bash
         run: |
@@ -60,5 +80,5 @@ jobs:
           gh release create "build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" \
             dist/Harbor-macOS.zip dist/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "Harbor 0.1 — build ${GITHUB_RUN_NUMBER}" \
+            --title "Harbor 0.2 — build ${GITHUB_RUN_NUMBER}" \
             --notes-file RELEASE_NOTES.md --latest

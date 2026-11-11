@@ -9,6 +9,9 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
     let address = NSTextField(string: "")
     let status = NSTextField(labelWithString: "Direct connection")
     let container = NSView()
+    let tunnelButton = NSButton(title: "Connect", target: nil, action: nil)
+    var tunnel: HarborTunnel?
+    var tunnelEnabled = false
     var proxyHost = ""
     var proxyPort: UInt16 = 0
 
@@ -46,7 +49,10 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
         address.setContentHuggingPriority(.defaultLow, for: .horizontal)
         toolbar.addArrangedSubview(address)
         toolbar.addArrangedSubview(NSButton(title: "Go", target: self, action: #selector(go)))
-        toolbar.addArrangedSubview(NSButton(title: "Proxy…", target: self, action: #selector(proxy)))
+        tunnelButton.target = self
+        tunnelButton.action = #selector(toggleTunnel)
+        toolbar.addArrangedSubview(tunnelButton)
+        toolbar.addArrangedSubview(NSButton(title: "Tunnel Setup…", target: self, action: #selector(importTunnel)))
         root.addArrangedSubview(toolbar)
         root.addArrangedSubview(status)
         root.addArrangedSubview(container)
@@ -83,7 +89,7 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
             web.topAnchor.constraint(equalTo: container.topAnchor),
             web.bottomAnchor.constraint(equalTo: container.bottomAnchor)
         ])
-        web.loadHTMLString("<html><body style='font:20px system-ui;padding:10%;color:#173344'><h1>Harbor</h1><p>Your WebKit browser.</p><p>Enter a website above, or configure your proxy first.</p><p>Browsing data is kept in memory for this session.</p></body></html>", baseURL: nil)
+        web.loadHTMLString("<html><body style='font:20px system-ui;padding:10%;color:#173344'><h1>Harbor</h1><p>Your WebKit browser.</p><p>Click Connect to browse through your encrypted US tunnel. Tunnel Setup imports your private connection file.</p><p>Browsing data is kept in memory for this session.</p></body></html>", baseURL: nil)
     }
 
     @objc func back() { web.goBack() }
@@ -109,50 +115,99 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
         web.load(URLRequest(url: url))
     }
 
-    @objc func proxy() {
-        let alert = NSAlert()
-        alert.messageText = "Proxy connection"
-        alert.informativeText = "Enter your HTTP CONNECT proxy server. Authentication is not supported. Applying a setting clears this session’s cookies and history."
-        let fields = NSStackView()
-        fields.orientation = .vertical
-        fields.frame = NSRect(x: 0, y: 0, width: 340, height: 60)
-        let host = NSTextField(string: proxyHost)
-        host.placeholderString = "Host, e.g. 127.0.0.1 (no http://)"
-        let port = NSTextField(string: proxyPort == 0 ? "8080" : String(proxyPort))
-        port.placeholderString = "Port"
-        fields.addArrangedSubview(host)
-        fields.addArrangedSubview(port)
-        alert.accessoryView = fields
-        alert.addButton(withTitle: "Use Proxy")
-        alert.addButton(withTitle: "Use Direct Connection")
-        alert.addButton(withTitle: "Cancel")
-        let response = alert.runModal()
-        if response == .alertFirstButtonReturn {
-            let h = host.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !h.isEmpty, !h.contains("://"), !h.contains("/"), !h.contains(where: { $0.isWhitespace }), let p = UInt16(port.stringValue), p > 0 else {
-                status.stringValue = "Invalid proxy: enter a host and port from 1 to 65535."
-                return
-            }
-            proxyHost = h
-            proxyPort = p
-        } else if response == .alertSecondButtonReturn {
-            proxyHost = ""
-            proxyPort = 0
-        } else { return }
+    @objc func importTunnel() {
+        let panel = NSOpenPanel()
+        panel.title = "Choose your Harbor connection file"
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            let settings = try JSONDecoder().decode(TunnelSettings.self, from: Data(contentsOf: url))
+            guard settings.url != nil else { throw NSError(domain: "Harbor", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid connection file. A secure wss:// endpoint and access token are required."]) }
+            try settings.save()
+            if tunnelEnabled { disconnectTunnel() }
+            status.stringValue = "US tunnel ready. Click Connect."
+        } catch { status.stringValue = "Setup failed: " + error.localizedDescription }
+    }
+
+    func disconnectTunnel() {
+        tunnelEnabled = false
+        tunnel?.stop()
+        tunnel = nil
+        proxyHost = ""
+        proxyPort = 0
         replaceWebView()
         address.stringValue = ""
-        status.stringValue = proxyPort == 0 ? "Direct connection" : "Proxy configured: \(proxyHost):\(proxyPort) — connection not yet verified"
+        status.stringValue = "Disconnected — direct browsing"
+        tunnelButton.title = "Connect"
+        tunnelButton.isEnabled = true
+    }
+
+    @objc func toggleTunnel() {
+        if tunnelEnabled { disconnectTunnel(); return }
+        guard let settings = TunnelSettings.load(), let endpoint = settings.url else {
+            importTunnel()
+            return
+        }
+        tunnelButton.isEnabled = false
+        status.stringValue = "Starting encrypted US tunnel…"
+        let bridge = HarborTunnel(endpoint: endpoint, token: settings.token)
+        tunnel = bridge
+        bridge.start { result in
+            DispatchQueue.main.async {
+                self.tunnelButton.isEnabled = true
+                switch result {
+                case .success(let port):
+                    self.proxyHost = "127.0.0.1"
+                    self.proxyPort = port
+                    self.tunnelEnabled = true
+                    self.tunnelButton.title = "Disconnect"
+                    self.replaceWebView()
+                    self.status.stringValue = "US tunnel enabled — checking browsing connection…"
+                    self.web.load(URLRequest(url: URL(string: "https://api.ipify.org/?format=json")!))
+                case .failure(let error):
+                    self.status.stringValue = "Could not start tunnel: " + error.localizedDescription
+                    bridge.stop()
+                    self.tunnel = nil
+                }
+            }
+        }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) { tunnel?.stop() }
+
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if tunnelEnabled, let url = navigationAction.request.url, url.scheme == "http" {
+            if var parts = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+                parts.scheme = "https"
+                if parts.port == 80 { parts.port = nil }
+                if let secure = parts.url { webView.load(URLRequest(url: secure)) }
+            }
+            decisionHandler(.cancel)
+        } else { decisionHandler(.allow) }
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         address.stringValue = webView.url?.absoluteString ?? ""
         window.title = webView.title ?? "Harbor Browser"
+        if tunnelEnabled, webView.url?.scheme == "https" {
+            status.stringValue = "Connected • United States • Harbor browsing only"
+            if webView.url?.host == "api.ipify.org" {
+                webView.evaluateJavaScript("document.body.innerText") { value, _ in
+                    guard self.tunnelEnabled, let text = value as? String,
+                          let data = text.data(using: .utf8),
+                          let object = try? JSONSerialization.jsonObject(with: data) as? [String: String],
+                          let ip = object["ip"] else { return }
+                    self.status.stringValue = "Connected • United States • IP: " + ip
+                }
+            }
+        }
     }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        if (error as NSError).code != NSURLErrorCancelled { status.stringValue = error.localizedDescription }
+        if (error as NSError).code != NSURLErrorCancelled { status.stringValue = (tunnelEnabled ? "Tunnel browsing failed — direct fallback blocked. " : "") + error.localizedDescription }
     }
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        status.stringValue = error.localizedDescription
+        status.stringValue = (tunnelEnabled ? "Tunnel browsing failed — direct fallback blocked. " : "") + error.localizedDescription
     }
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
         if navigationAction.targetFrame == nil, let url = navigationAction.request.url, ["https", "http"].contains(url.scheme ?? "") {
