@@ -17,6 +17,15 @@ class TunnelTests(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self):
         await self.client.close()
         await self.server.close()
+    async def test_private_setup_download(self):
+        import hmac, hashlib
+        async with self.client.get(self.server.make_url('/setup/wrong')) as response:
+            self.assertEqual(response.status,404)
+        code = hmac.new(tunnel.TOKEN.encode(), b'harbor-setup', hashlib.sha256).hexdigest()
+        async with self.client.get(self.server.make_url('/setup/'+code)) as response:
+            self.assertEqual(response.status,200)
+            self.assertEqual(response.headers['Cache-Control'],'no-store')
+            self.assertEqual((await response.json())['token'],tunnel.TOKEN)
     async def test_unauthenticated_rejected(self):
         with self.assertRaises(WSServerHandshakeError) as result:
             await self.client.ws_connect(self.server.make_url('/tunnel'))

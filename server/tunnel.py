@@ -1,6 +1,7 @@
 """Authenticated WebSocket byte tunnel. Never logs destinations or credentials."""
 import asyncio
 import hmac
+import hashlib
 import ipaddress
 import os
 import socket
@@ -24,6 +25,18 @@ async def resolve_public(host, port):
 
 async def health(request):
     return web.json_response({'service': 'harbor-tunnel', 'region': 'US', 'ready': True})
+
+async def setup(request):
+    # Private download link. Do not log this URL or commit its value.
+    expected = hmac.new(TOKEN.encode(), b'harbor-setup', hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(request.match_info['code'], expected):
+        raise web.HTTPNotFound()
+    hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'harbor-tunnel-aaron.onrender.com')
+    return web.json_response({'endpoint': 'wss://' + hostname + '/tunnel', 'token': TOKEN}, headers={
+        'Content-Disposition': 'attachment; filename="Harbor-Connection.json"',
+        'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer',
+        'X-Content-Type-Options': 'nosniff'})
+
 
 def authorize(request):
     value = request.headers.get('Authorization', '')
@@ -81,6 +94,7 @@ def application():
         raise RuntimeError('Set HARBOR_TOKEN to a random secret of at least 32 characters')
     app = web.Application(client_max_size=131072)
     app.router.add_get('/health', health)
+    app.router.add_get('/setup/{code}', setup)
     app.router.add_get('/tunnel', tunnel)
     app.on_shutdown.append(shutdown)
     return app
