@@ -20,7 +20,7 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
         let item = NSMenuItem()
         menu.addItem(item)
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "Quit Harbor", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "Quit Secrét", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         item.submenu = appMenu
         let edit = NSMenuItem()
         menu.addItem(edit)
@@ -31,7 +31,7 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
         edit.submenu = editMenu
         NSApp.mainMenu = menu
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1150, height: 780), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
-        window.title = "Harbor Browser"
+        window.title = "Secrét"
         window.minSize = NSSize(width: 640, height: 420)
         let root = NSStackView()
         root.orientation = .vertical
@@ -89,7 +89,7 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
             web.topAnchor.constraint(equalTo: container.topAnchor),
             web.bottomAnchor.constraint(equalTo: container.bottomAnchor)
         ])
-        web.loadHTMLString("<html><body style='font:20px system-ui;padding:10%;color:#173344'><h1>Harbor</h1><p>Your WebKit browser.</p><p>Click Connect to browse through your encrypted US tunnel. Tunnel Setup imports your private connection file.</p><p>Browsing data is kept in memory for this session.</p></body></html>", baseURL: nil)
+        web.loadHTMLString("<html><body style='font:20px system-ui;padding:10%;color:#173344'><h1>Secrét</h1><p>Your WebKit browser.</p><p>Click Connect to browse through your encrypted US tunnel. Tunnel Setup imports your private connection file.</p><p>Browsing data is kept in memory for this session.</p></body></html>", baseURL: nil)
     }
 
     @objc func back() { web.goBack() }
@@ -117,7 +117,7 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
 
     @objc func importTunnel() {
         let panel = NSOpenPanel()
-        panel.title = "Choose your Harbor connection file"
+        panel.title = "Choose your Secrét connection file"
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
@@ -189,9 +189,9 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         address.stringValue = webView.url?.absoluteString ?? ""
-        window.title = webView.title ?? "Harbor Browser"
+        window.title = webView.title ?? "Secrét"
         if tunnelEnabled, webView.url?.scheme == "https" {
-            status.stringValue = "Connected • United States • Harbor browsing only"
+            status.stringValue = "Connected • United States • Secrét browsing only"
             if webView.url?.host == "api.ipify.org" {
                 webView.evaluateJavaScript("document.body.innerText") { value, _ in
                     guard self.tunnelEnabled, let text = value as? String,
@@ -228,7 +228,7 @@ struct HarborApplication {
             app.delegate = browser
             app.run()
         } else {
-            print("Harbor requires macOS 14 or later.")
+            print("Secrét requires macOS 14 or later.")
         }
     }
 }

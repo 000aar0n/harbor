@@ -12,25 +12,26 @@ fi
 mkdir -p build dist
 stage=$(mktemp -d "$PWD/build/package.XXXXXX")
 trap 'rm -rf "$stage"' EXIT
-app="$stage/Harbor.app"
+app="$stage/Secrét.app"
 mkdir -p "$app/Contents/MacOS"
 sdk=$(xcrun --sdk macosx --show-sdk-path)
 for arch in arm64 x86_64; do
   xcrun swiftc Harbor.swift Tunnel.swift TunnelSettings.swift -O -sdk "$sdk" -target "${arch}-apple-macos14.0" \
     -framework Cocoa -framework WebKit -framework Network -framework Security \
-    -o "$stage/Harbor-$arch"
+    -o "$stage/Secret-$arch"
 done
-xcrun lipo -create "$stage/Harbor-arm64" "$stage/Harbor-x86_64" \
-  -output "$app/Contents/MacOS/Harbor"
+xcrun lipo -create "$stage/Secret-arm64" "$stage/Secret-x86_64" \
+  -output "$app/Contents/MacOS/Secret"
 cat > "$app/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-<key>CFBundleExecutable</key><string>Harbor</string>
+<key>CFBundleExecutable</key><string>Secret</string>
 <key>CFBundleIdentifier</key><string>local.harbor.browser</string>
-<key>CFBundleName</key><string>Harbor</string>
+<key>CFBundleName</key><string>Secrét</string>
+<key>CFBundleDisplayName</key><string>Secrét</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.2.0</string>
+<key>CFBundleShortVersionString</key><string>0.2.1</string>
 <key>CFBundleVersion</key><string>1</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSHighResolutionCapable</key><true/>
@@ -40,12 +41,12 @@ plutil -lint "$app/Contents/Info.plist"
 codesign --force --sign - --timestamp=none "$app"
 codesign --verify --deep --strict --verbose=2 "$app"
 test -s "$app/Contents/_CodeSignature/CodeResources"
-xcrun lipo "$app/Contents/MacOS/Harbor" -verify_arch arm64 x86_64
-ditto -c -k --sequesterRsrc --keepParent "$app" "$stage/Harbor-macOS.zip"
+xcrun lipo "$app/Contents/MacOS/Secret" -verify_arch arm64 x86_64
+ditto -c -k --sequesterRsrc --keepParent "$app" "$stage/Secret-macOS.zip"
 mkdir "$stage/unpacked"
-ditto -x -k "$stage/Harbor-macOS.zip" "$stage/unpacked"
-codesign --verify --deep --strict --verbose=2 "$stage/unpacked/Harbor.app"
-test -s "$stage/unpacked/Harbor.app/Contents/_CodeSignature/CodeResources"
-mv "$stage/Harbor-macOS.zip" dist/Harbor-macOS.zip
-(cd dist && shasum -a 256 Harbor-macOS.zip > SHA256SUMS)
-echo 'Built, signed, and verified the packaged app: dist/Harbor-macOS.zip'
+ditto -x -k "$stage/Secret-macOS.zip" "$stage/unpacked"
+codesign --verify --deep --strict --verbose=2 "$stage/unpacked/Secrét.app"
+test -s "$stage/unpacked/Secrét.app/Contents/_CodeSignature/CodeResources"
+mv "$stage/Secret-macOS.zip" dist/Secret-macOS.zip
+(cd dist && shasum -a 256 Secret-macOS.zip > SHA256SUMS)
+echo 'Built, signed, and verified the packaged app: dist/Secret-macOS.zip'
