@@ -218,12 +218,17 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 }
 
-if #available(macOS 14.0, *) {
-    let app = NSApplication.shared
-    let browser = Browser()
-    app.setActivationPolicy(.regular)
-    app.delegate = browser
-    app.run()
-} else {
-    print("Harbor requires macOS 14 or later.")
+@main
+struct HarborApplication {
+    static func main() {
+        if #available(macOS 14.0, *) {
+            let app = NSApplication.shared
+            let browser = Browser()
+            app.setActivationPolicy(.regular)
+            app.delegate = browser
+            app.run()
+        } else {
+            print("Harbor requires macOS 14 or later.")
+        }
+    }
 }
