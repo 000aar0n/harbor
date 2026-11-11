@@ -1,0 +1,64 @@
+name: Build Harbor for Mac
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Harbor.swift
+      - build-macos.sh
+      - RELEASE_NOTES.md
+      - .github/workflows/build-macos.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: harbor-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and verify both Mac architectures
+        run: bash build-macos.sh
+      - name: Check that the packaged app starts
+        shell: bash
+        run: |
+          set -euo pipefail
+          smoke_dir=$(mktemp -d)
+          ditto -x -k dist/Harbor-macOS.zip "$smoke_dir"
+          "$smoke_dir/Harbor.app/Contents/MacOS/Harbor" > build/startup.log 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true; rm -rf "$smoke_dir"' EXIT
+          sleep 5
+          if ! kill -0 "$app_pid" 2>/dev/null; then
+            cat build/startup.log
+            echo 'Harbor exited during the startup check.' >&2
+            exit 1
+          fi
+          echo 'Harbor remained running through the startup check.'
+      - name: Save build files
+        uses: actions/upload-artifact@v4
+        with:
+          name: Harbor-macOS
+          path: |
+            dist/Harbor-macOS.zip
+            dist/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 7
+      - name: Publish downloadable app
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" \
+            dist/Harbor-macOS.zip dist/SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Harbor 0.1 — build ${GITHUB_RUN_NUMBER}" \
+            --notes-file RELEASE_NOTES.md --latest
