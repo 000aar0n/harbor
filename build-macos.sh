@@ -40,7 +40,7 @@ plutil -lint "$app/Contents/Info.plist"
 codesign --force --sign - --timestamp=none "$app"
 codesign --verify --deep --strict --verbose=2 "$app"
 test -s "$app/Contents/_CodeSignature/CodeResources"
-xcrun lipo -verify_arch arm64 x86_64 "$app/Contents/MacOS/Harbor"
+xcrun lipo "$app/Contents/MacOS/Harbor" -verify_arch arm64 x86_64
 ditto -c -k --sequesterRsrc --keepParent "$app" "$stage/Harbor-macOS.zip"
 mkdir "$stage/unpacked"
 ditto -x -k "$stage/Harbor-macOS.zip" "$stage/unpacked"
