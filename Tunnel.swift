@@ -39,7 +39,10 @@ final class HarborTunnel {
     }
     func stop() {
         queue.async {
+            self.listener?.newConnectionHandler = nil
+            self.listener?.stateUpdateHandler = nil
             self.listener?.cancel()
+            self.listener = nil
             let current = Array(self.streams.values)
             current.forEach { $0.close() }
             self.session.invalidateAndCancel()

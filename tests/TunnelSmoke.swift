@@ -27,7 +27,7 @@ final class TunnelSmoke: NSObject, WKNavigationDelegate {
                 config.websiteDataStore = store
                 self.web = WKWebView(frame: NSRect(x: 0, y: 0, width: 800, height: 600), configuration: config)
                 self.web.navigationDelegate = self
-                self.web.load(URLRequest(url: URL(string: "https://example.com/")!))
+                self.web.load(URLRequest(url: URL(string: "https://api.ipify.org/?format=json")!))
             }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 80) { self.fail("Timed out") }
@@ -36,7 +36,12 @@ final class TunnelSmoke: NSObject, WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         if checkingFailure { fail("Direct fallback occurred after tunnel stopped"); return }
         webView.evaluateJavaScript("document.body.innerText") { value, error in
-            guard let text = value as? String, text.contains("Example Domain") else { self.fail("Tunnel did not deliver destination content. URL: \(webView.url?.absoluteString ?? "nil") Body: \(String(describing: value)) Error: \(String(describing: error))"); return }
+            guard let text = value as? String, let data = text.data(using: .utf8),
+                  let object = try? JSONSerialization.jsonObject(with: data) as? [String: String],
+                  let ip = object["ip"], !ip.isEmpty else {
+                self.fail("Tunnel did not deliver IP-check JSON. Body: \(String(describing: value)) Error: \(String(describing: error))"); return
+            }
+            print("Verified tunnel egress IP: " + ip)
             print("PASS: WebKit HTTPS traffic crossed the authenticated WebSocket tunnel")
             self.checkingFailure = true
             self.bridge.stop()
