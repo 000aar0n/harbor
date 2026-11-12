@@ -143,7 +143,7 @@ final class Browser: MouseCaptureDelegate, NSApplicationDelegate, WKNavigationDe
         let endpoint = engine == "Google" ? "https://www.google.com/search" : engine == "DuckDuckGo" ? "https://duckduckgo.com/" : "https://www.bing.com/search"
         let mode = tunnelEnabled ? "US tunnel enabled" : "Direct browsing"
         web.loadHTMLString("""
-        <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+        <!doctype html><html lang="en"><head><title>Secrét</title><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
         <style>
         :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#080a08;color:#c4cec5;font:14px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.7}
         main{max-width:780px;margin:14vh auto;padding:32px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #263329;padding-bottom:18px;color:#82a689;font-size:12px}
