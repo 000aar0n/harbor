@@ -1,6 +1,7 @@
 /build/
 /dist/
 *.app/
-
-/gecko/node_modules/
-__pycache__/
+**/node_modules/
+**/dist/
+**/Harbor-Connection.json
+**/popup-tested.png

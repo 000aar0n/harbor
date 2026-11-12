@@ -1,17 +1,5 @@
 name: Build eloter Gecko edition for Mac
 on:
-  push:
-    branches: [main]
-    paths:
-      - GeckoLauncher.swift
-      - TunnelSettings.swift
-      - gecko/**
-      - assets/**
-      - server/**
-      - tests/**
-      - build-gecko-macos.sh
-      - RELEASE_NOTES.md
-      - .github/workflows/build-macos.yml
   workflow_dispatch:
 permissions:
   contents: read
