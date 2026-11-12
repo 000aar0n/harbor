@@ -1,0 +1,62 @@
+name: Gecko ARM64 cross-build candidate (native test pending)
+on:
+  push:
+    branches: [codex/gecko-arm64-candidate]
+    paths: [.github/workflows/gecko-arm64-candidate.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: gecko-arm64-candidate-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  candidate:
+    runs-on: macos-26-intel
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26.13.1'
+      - name: Prepare a labelled ARM64 cross-build
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('build-gecko-macos.sh')
+          lines=[]
+          for line in p.read_text().splitlines():
+              if '[ "$(uname -m)" = arm64 ]' in line:
+                  continue
+              if 'PASS: Bundled Node runtime executes JavaScript' in line:
+                  lines.append('echo "CANDIDATE: Native ARM64 runtime execution is pending; this host is Intel."')
+              else:
+                  lines.append(line)
+          text='\n'.join(lines)+'\n'
+          text=text.replace('<key>CFBundleName</key>', '<key>CFBundleGetInfoString</key><string>Development cross-build candidate; native Apple Silicon validation pending.</string>\n<key>CFBundleName</key>')
+          p.write_text(text)
+          PY
+      - name: Build ARM64 package from the corrected source
+        run: bash build-gecko-macos.sh
+      - name: Verify package signature and both ARM64 executables
+        run: |
+          mkdir -p build/candidate-unpacked
+          ditto -x -k dist/eloter-Gecko-AppleSilicon.zip build/candidate-unpacked
+          app="$PWD/build/candidate-unpacked/eloter.app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          test "$(xcrun lipo -archs "$app/Contents/MacOS/Secret")" = arm64
+          test "$(xcrun lipo -archs "$app/Contents/Resources/runtime/node/bin/node")" = arm64
+          cat > dist/CANDIDATE-NOTE.txt <<'NOTE'
+          This is a development candidate cross-compiled for Apple Silicon.
+          Archive integrity, ARM64 architecture, and code signatures were checked.
+          Full native-hardware validation of this exact package is still pending.
+          It is not a verified release, and no claim is made that it fixes school-managed device terminations.
+          NOTE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eloter-Gecko-ARM64-CANDIDATE
+          path: |
+            dist/eloter-Gecko-AppleSilicon.zip
+            dist/SHA256SUMS
+            dist/CANDIDATE-NOTE.txt
+          retention-days: 3
+          if-no-files-found: error
