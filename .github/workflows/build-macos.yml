@@ -24,13 +24,13 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-26-intel
+    runs-on: macos-26
     timeout-minutes: 15
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Build and verify both Mac architectures
+      - name: Build and verify optimized Apple Silicon app
         run: bash build-macos.sh
       - name: Test encrypted browsing and blocked fallback
         shell: bash
@@ -58,15 +58,15 @@ jobs:
         run: |
           set -euo pipefail
           smoke_dir=$(mktemp -d)
-          ditto -x -k dist/goonson-macOS.zip "$smoke_dir"
+          ditto -x -k dist/goonson-AppleSilicon.zip "$smoke_dir"
           trap 'rm -rf "$smoke_dir"' EXIT
           bash tests/check-startup.sh "$smoke_dir/goonson.app"
       - name: Save build files
         uses: actions/upload-artifact@v4
         with:
-          name: goonson-macOS
+          name: goonson-AppleSilicon
           path: |
-            dist/goonson-macOS.zip
+            dist/goonson-AppleSilicon.zip
             dist/SHA256SUMS
           if-no-files-found: error
           retention-days: 7
@@ -76,7 +76,7 @@ jobs:
         shell: bash
         run: |
           gh release create "build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" \
-            dist/goonson-macOS.zip dist/SHA256SUMS \
+            dist/goonson-AppleSilicon.zip dist/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "goonson 0.2.5 — build ${GITHUB_RUN_NUMBER}" \
+            --title "goonson 0.2.6 — build ${GITHUB_RUN_NUMBER}" \
             --notes-file RELEASE_NOTES.md --latest

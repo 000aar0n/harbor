@@ -1,10 +1,10 @@
 # goonson
 
-A native Mac WebKit browser with an encrypted, authenticated US browsing tunnel. Requires macOS 14 or later; supports Apple Silicon and Intel.
+A native Mac WebKit browser with an encrypted, authenticated US browsing tunnel. Requires macOS 14 or later; supports Apple Silicon.
 
 ## Use
 
-1. Download **goonson-macOS.zip** from [Releases](https://github.com/000aar0n/harbor/releases/latest), extract it, and open goonson.app.
+1. Download **goonson-AppleSilicon.zip** from [Releases](https://github.com/000aar0n/harbor/releases/latest), extract it, and open goonson.app.
 2. Click **Tunnel Setup…** and select your private **Harbor-Connection.json** file. goonson saves its access key in macOS Keychain. Keep this file private; it grants access to your server.
 3. Click **Connect**. goonson loads an IP-check page through the tunnel. The status displays your US browsing IP after a successful response.
 4. Browse normally. **Disconnect** explicitly returns to direct browsing and clears the session. Connecting, disconnecting, and importing settings clear session cookies and history.
@@ -29,13 +29,13 @@ The free Render plan can sleep when idle and take time to wake. Failed requests 
 
 ## Build and validation
 
-On macOS, run `bash build-macos.sh`. GitHub Actions builds both architectures, checks signing and packaged startup, exercises actual WebKit HTTPS traffic through the WebSocket server, and verifies that stopping the tunnel blocks subsequent browsing. A successful workflow publishes the app. Server tests: `python3 -m unittest discover -s tests -v` after installing server requirements.
+On macOS, run `bash build-macos.sh`. GitHub Actions builds native arm64 with whole-module optimization and linker dead stripping, checks signing and packaged startup, exercises actual WebKit HTTPS traffic through the WebSocket server, and verifies that stopping the tunnel blocks subsequent browsing. A successful workflow publishes the app. Server tests: `python3 -m unittest discover -s tests -v` after installing server requirements.
 
 This preview is ad-hoc signed, not notarized. Your Mac may require approval to run it. The app cannot override Gatekeeper or device management policies.
 
 ## Opening the downloaded app with xattr
 
-After extracting goonson-macOS.zip in Downloads, run these commands in Terminal on your Mac:
+After extracting goonson-AppleSilicon.zip in Downloads, run these commands in Terminal on your Mac:
 
 ```sh
 xattr -dr com.apple.quarantine "$HOME/Downloads/goonson.app"
@@ -55,3 +55,7 @@ Use the Safari button to open the current site in Safari for passkey sign-in. Sa
 WebKit fullscreen is enabled. On a secure game page, click the game. Mouse capture is authorized immediately while goonson is active and its web window has focus; no modal permission dialog interrupts startup. WebKit handles cursor hiding and relative mouse movement; Escape releases capture. Authorization is implemented through WebKit’s non-public Objective-C delegate selectors, isolated in MouseCapture.swift; these selectors may change in future macOS releases. The Mac workflow tests actual pointer lock and unlock.
 
 GeForce NOW/Fortnite streaming has not been verified. Browser support and streaming transport are controlled by NVIDIA and WebKit. The Render browsing tunnel does not tunnel UDP/WebRTC game streams, so it cannot be treated as a gaming VPN.
+
+## Apple Silicon build
+
+The current download is arm64 only for Apple Silicon Macs (M-series). It runs natively, without Rosetta, and omits the Intel executable slice. Release compilation uses `-O -whole-module-optimization` and linker dead stripping. Launch, browsing, and pointer-lock checks run on an Apple Silicon macOS 26 runner. This is a smaller native package; no benchmarked speedup is claimed.

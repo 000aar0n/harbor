@@ -1,7 +1,5 @@
-goonson 0.2.5 renames the app, menus, home page, and download package. The application identity and existing tunnel setup remain compatible.
+goonson 0.2.6 is an Apple Silicon-only release for M-series Macs.
 
-Download goonson-macOS.zip, extract it, and open goonson.app.
+Download goonson-AppleSilicon.zip, extract it, and open goonson.app. The executable is native arm64, compiled with release and whole-module optimization plus linker dead stripping. The Intel slice is removed; Intel Macs are not supported by this download. No Rosetta is required. No benchmarked speedup is claimed.
 
-Launch verification now checks that the actual home window renders, both when starting the executable and when opening the packaged app through LaunchServices. The application delegate is explicitly retained for the application lifetime. The release checks run on macOS 26 and build a universal executable for Intel and Apple Silicon.
-
-This preview is ad-hoc signed and not notarized. Renaming does not change approval requirements on managed devices. Requires macOS 14 or later.
+Launch, search-through-tunnel, and pointer capture/release checks run on an Apple Silicon macOS 26 runner. Existing tunnel setup files remain compatible. This preview is ad-hoc signed and not notarized; managed-device approval requirements are unchanged.
