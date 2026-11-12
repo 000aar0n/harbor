@@ -11,6 +11,10 @@ A native Mac WebKit browser with an encrypted, authenticated US browsing tunnel.
 
 The tunnel covers HTTP CONNECT web traffic within Secrét and upgrades HTTP navigations to HTTPS. It is not a system VPN, does not affect other applications, and does not provide country selection. It does not claim to tunnel arbitrary UDP or WebRTC traffic. Non-HTTPS sites may not work. WebKit direct proxy failover is disabled: an unavailable tunnel produces a browsing error. The button enables routing; the connected label appears only after a page loads through it.
 
+## Search
+
+Type a query in the address bar and press Return. Bing is the default search engine. The toolbar selector also offers Google and DuckDuckGo and remembers your choice. If a search provider rejects the shared tunnel IP, choose another engine and submit your query again.
+
 ## Server
 
 Render runs `server/tunnel.py` with `pip install -r server/requirements.txt` and `python server/tunnel.py`. Set `HARBOR_TOKEN` to a random secret of at least 32 characters. The authenticated `/tunnel` WebSocket forwards binary streams to public destinations on ports 80 and 443. DNS resolves on the server; private, reserved, and link-local destinations are rejected and validated addresses are pinned for connection. No destination or access logs are recorded by the application. Render and destination websites have their own infrastructure logs.
@@ -39,3 +43,9 @@ open "$HOME/Downloads/Secrét.app"
 ```
 
 This removes the downloaded app's quarantine attribute. It does not notarize the app or override device management policies. If you extracted it somewhere else, use that app's path instead. The existing Harbor connection file remains compatible.
+
+## Passkeys
+
+The current ad-hoc signed build cannot enable arbitrary-site passkeys inside WebKit. Apple requires an organization Apple Developer account and approval for `com.apple.developer.web-browser.public-key-credential`: https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.web-browser.public-key-credential
+
+Use the Safari button to open the current site in Safari for passkey sign-in. Safari uses its own session and is outside Secrét’s tunnel. This does not sign you into the site within Secrét.

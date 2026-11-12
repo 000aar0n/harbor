@@ -7,6 +7,7 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
     var window: NSWindow!
     var web: WKWebView!
     let address = NSTextField(string: "")
+    let searchEngine = NSPopUpButton(frame: .zero, pullsDown: false)
     let status = NSTextField(labelWithString: "Direct connection")
     let container = NSView()
     let tunnelButton = NSButton(title: "Connect", target: nil, action: nil)
@@ -32,17 +33,32 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
         NSApp.mainMenu = menu
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1150, height: 780), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.title = "Secrét"
-        window.minSize = NSSize(width: 640, height: 420)
+        window.minSize = NSSize(width: 1040, height: 500)
+        window.appearance = NSAppearance(named: .darkAqua)
+        window.backgroundColor = NSColor(calibratedWhite: 0.025, alpha: 1)
+        window.titlebarAppearsTransparent = true
         let root = NSStackView()
         root.orientation = .vertical
-        root.spacing = 8
+        root.spacing = 12
+        root.wantsLayer = true
+        root.layer?.backgroundColor = NSColor(calibratedWhite: 0.025, alpha: 1).cgColor
         root.edgeInsets = NSEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
         window.contentView = root
         let toolbar = NSStackView()
-        toolbar.spacing = 8
-        for (title, action) in [("←", #selector(back)), ("→", #selector(forward)), ("Reload", #selector(reload))] {
+        toolbar.spacing = 6
+        let brand = NSTextField(labelWithString: "secrét_")
+        brand.font = .monospacedSystemFont(ofSize: 16, weight: .bold)
+        brand.textColor = NSColor(calibratedRed: 0.35, green: 0.95, blue: 0.48, alpha: 1)
+        toolbar.addArrangedSubview(brand)
+        for (title, action) in [("←", #selector(back)), ("→", #selector(forward)), ("Reload", #selector(reload)), ("Home", #selector(home))] {
             toolbar.addArrangedSubview(NSButton(title: title, target: self, action: action))
         }
+        searchEngine.addItems(withTitles: ["Bing", "Google", "DuckDuckGo"])
+        searchEngine.toolTip = "Search engine — switch if a provider is unavailable"
+        searchEngine.selectItem(withTitle: UserDefaults.standard.string(forKey: "searchEngine") ?? "Bing")
+        searchEngine.target = self
+        searchEngine.action = #selector(changeSearchEngine)
+        toolbar.addArrangedSubview(searchEngine)
         address.placeholderString = "Search or enter a website"
         address.target = self
         address.action = #selector(go)
@@ -52,14 +68,29 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
         tunnelButton.target = self
         tunnelButton.action = #selector(toggleTunnel)
         toolbar.addArrangedSubview(tunnelButton)
-        toolbar.addArrangedSubview(NSButton(title: "Tunnel Setup…", target: self, action: #selector(importTunnel)))
+        toolbar.addArrangedSubview(NSButton(title: "Setup", target: self, action: #selector(importTunnel)))
+        toolbar.addArrangedSubview(NSButton(title: "Safari ↗", target: self, action: #selector(openInSafari)))
+        for case let button as NSButton in toolbar.arrangedSubviews {
+            button.bezelStyle = .regularSquare
+            button.font = .monospacedSystemFont(ofSize: 11, weight: .medium)
+            button.contentTintColor = NSColor(calibratedRed: 0.42, green: 0.9, blue: 0.52, alpha: 1)
+        }
+        address.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        address.backgroundColor = NSColor(calibratedWhite: 0.065, alpha: 1)
+        address.textColor = NSColor(calibratedWhite: 0.9, alpha: 1)
+        address.focusRingType = .none
+        searchEngine.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        container.wantsLayer = true
+        container.layer?.borderWidth = 1
+        container.layer?.borderColor = NSColor(calibratedWhite: 0.16, alpha: 1).cgColor
         root.addArrangedSubview(toolbar)
         root.addArrangedSubview(status)
         root.addArrangedSubview(container)
         for view in [toolbar, status, container] {
             view.widthAnchor.constraint(equalTo: root.widthAnchor, constant: -20).isActive = true
         }
-        status.font = .systemFont(ofSize: 11)
+        status.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        status.textColor = NSColor(calibratedRed: 0.42, green: 0.75, blue: 0.49, alpha: 1)
         replaceWebView()
         window.center()
         window.makeKeyAndOrderFront(nil)
@@ -89,12 +120,55 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
             web.topAnchor.constraint(equalTo: container.topAnchor),
             web.bottomAnchor.constraint(equalTo: container.bottomAnchor)
         ])
-        web.loadHTMLString("<html><body style='font:20px system-ui;padding:10%;color:#173344'><h1>Secrét</h1><p>Your WebKit browser.</p><p>Click Connect to browse through your encrypted US tunnel. Tunnel Setup imports your private connection file.</p><p>Browsing data is kept in memory for this session.</p></body></html>", baseURL: nil)
+        home()
+    }
+
+    @objc func home() {
+        let engine = searchEngine.titleOfSelectedItem ?? "Bing"
+        let endpoint = engine == "Google" ? "https://www.google.com/search" : engine == "DuckDuckGo" ? "https://duckduckgo.com/" : "https://www.bing.com/search"
+        let mode = tunnelEnabled ? "US tunnel enabled" : "Direct browsing"
+        web.loadHTMLString("""
+        <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+        <style>
+        :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#080a08;color:#c4cec5;font:14px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.7}
+        main{max-width:780px;margin:14vh auto;padding:32px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #263329;padding-bottom:18px;color:#82a689;font-size:12px}
+        h1{font-size:48px;font-weight:500;letter-spacing:-3px;color:#75ee8b;margin:52px 0 4px}p{color:#839086;margin:0 0 32px}form{display:flex;align-items:center;border:1px solid #35523d;background:#0d130e;padding:6px 8px 6px 16px;gap:12px}label{color:#75ee8b}input{min-width:0;flex:1;background:transparent;color:#e2ebe3;border:0;padding:12px 0;font:inherit;outline:none}form:focus-within{border-color:#75ee8b}button{background:#17291b;color:#9cf3ac;border:1px solid #34553c;padding:10px 16px;font:inherit;cursor:pointer}button:hover{background:#23402a}nav{display:flex;gap:26px;padding:24px 0}a{color:#8eb597;text-decoration:none}a:hover{color:#a7ffb6;text-decoration:underline}footer{margin-top:72px;border-top:1px solid #263329;padding-top:18px;color:#5f7864;font-size:11px}input:focus-visible,button:focus-visible,a:focus-visible{outline:1px solid #75ee8b;outline-offset:4px}@media(max-width:600px){main{margin:8vh auto;padding:22px}h1{font-size:40px}header{gap:20px}button{padding:10px}}
+        </style></head><body><main>
+        <header><span>secrét / browser</span><span>\(mode)</span></header>
+        <h1>secrét_</h1><p>A quiet place to search.</p>
+        <form action="\(endpoint)" method="get"><label for="q">&gt;</label><input id="q" name="q" type="search" placeholder="Search with \(engine)" aria-label="Search with \(engine)" required autocomplete="off"><button type="submit">Search ↵</button></form>
+        <nav aria-label="Quick links"><a href="https://www.wikipedia.org/">Wikipedia ↗</a><a href="https://github.com/">GitHub ↗</a><a href="https://api.ipify.org/?format=json">Check IP ↗</a></nav>
+        <footer>Connect in the toolbar to use your US browsing tunnel.</footer>
+        </main></body></html>
+        """, baseURL: nil)
+        address.stringValue = ""
+        window.title = "Secrét"
+    }
+
+    @objc func openInSafari() {
+        guard let url = web.url, ["http", "https"].contains(url.scheme ?? "") else {
+            status.stringValue = "Open a website first, then use Safari for passkey sign-in."
+            return
+        }
+        let alert = NSAlert()
+        alert.messageText = "Open this site in Safari?"
+        alert.informativeText = "Safari supports passkeys. This opens a separate browsing session outside Secrét’s tunnel."
+        alert.addButton(withTitle: "Open in Safari")
+        alert.addButton(withTitle: "Cancel")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        NSWorkspace.shared.open([url], withApplicationAt: URL(fileURLWithPath: "/System/Applications/Safari.app"), configuration: NSWorkspace.OpenConfiguration()) { _, error in
+            if let error = error { DispatchQueue.main.async { self.status.stringValue = error.localizedDescription } }
+        }
     }
 
     @objc func back() { web.goBack() }
     @objc func forward() { web.goForward() }
     @objc func reload() { web.reload() }
+    @objc func changeSearchEngine() {
+        UserDefaults.standard.set(searchEngine.titleOfSelectedItem ?? "Bing", forKey: "searchEngine")
+        status.stringValue = "Search engine: " + (searchEngine.titleOfSelectedItem ?? "Bing")
+        if web.url == nil || web.url?.scheme == "about" { home() }
+    }
     @objc func go() {
         let text = address.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
@@ -103,7 +177,9 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
             if !text.contains(" ") && (text.contains(".") || text.hasPrefix("localhost")) {
                 value = "https://" + text
             } else {
-                var search = URLComponents(string: "https://duckduckgo.com/")!
+                let engine = searchEngine.titleOfSelectedItem ?? "Bing"
+                let endpoint = engine == "Google" ? "https://www.google.com/search" : engine == "DuckDuckGo" ? "https://duckduckgo.com/" : "https://www.bing.com/search"
+                var search = URLComponents(string: endpoint)!
                 search.queryItems = [URLQueryItem(name: "q", value: text)]
                 value = search.url!.absoluteString
             }

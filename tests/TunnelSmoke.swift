@@ -8,6 +8,7 @@ final class TunnelSmoke: NSObject, WKNavigationDelegate {
     var bridge: HarborTunnel!
     var web: WKWebView!
     var checkingFailure = false
+    var checkingSearch = false
     static func main() {
         _ = NSApplication.shared
         instance = TunnelSmoke()
@@ -30,12 +31,24 @@ final class TunnelSmoke: NSObject, WKNavigationDelegate {
                 self.web.load(URLRequest(url: URL(string: "https://api.ipify.org/?format=json")!))
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 80) { self.fail("Timed out") }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 120) { self.fail("Timed out") }
     }
     func fail(_ message: String) { fputs(message + "\n", stderr); exit(1) }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         if checkingFailure { fail("Direct fallback occurred after tunnel stopped"); return }
         webView.evaluateJavaScript("document.body.innerText") { value, error in
+            if self.checkingSearch {
+                guard let text = value as? String, text.lowercased().contains("wikipedia"), text.count > 300 else {
+                    self.fail("Search results did not render through tunnel"); return
+                }
+                print("PASS: Bing search results rendered through the WebKit tunnel")
+                self.checkingFailure = true
+                self.bridge.stop()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    self.web.load(URLRequest(url: URL(string: "https://www.iana.org/help/example-domains?harbor-smoke=1")!, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 20))
+                }
+                return
+            }
             guard let text = value as? String, let data = text.data(using: .utf8),
                   let object = try? JSONSerialization.jsonObject(with: data) as? [String: String],
                   let ip = object["ip"], !ip.isEmpty else {
@@ -43,11 +56,8 @@ final class TunnelSmoke: NSObject, WKNavigationDelegate {
             }
             print("Verified tunnel egress IP: " + ip)
             print("PASS: WebKit HTTPS traffic crossed the authenticated WebSocket tunnel")
-            self.checkingFailure = true
-            self.bridge.stop()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                self.web.load(URLRequest(url: URL(string: "https://www.iana.org/help/example-domains?harbor-smoke=1")!, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 20))
-            }
+            self.checkingSearch = true
+            self.web.load(URLRequest(url: URL(string: "https://www.bing.com/search?q=wikipedia")!))
         }
     }
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {

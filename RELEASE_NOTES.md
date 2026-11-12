@@ -1,10 +1,11 @@
-Secrét 0.2.1 renames Harbor to Secrét throughout the app, menus, and Mac bundle. The encrypted US browsing tunnel and existing connection files remain compatible.
+Secrét 0.2.2 fixes unreliable searches through the browsing tunnel by defaulting to Bing and adding a search-engine selector in the toolbar. Choose Bing, Google, or DuckDuckGo; your choice is saved for the next launch. Search providers may restrict shared server IP addresses; switch providers if one is unavailable.
 
-Download Secret-macOS.zip, extract it, and open Secrét.app. Import your private Harbor-Connection.json with Tunnel Setup, then click Connect.
+Download Secret-macOS.zip and replace the previous app with Secrét.app. Your tunnel connection file remains compatible.
 
-To remove the download quarantine after extracting into Downloads, run in Terminal on your Mac:
+Adds a minimal black-and-green interface, a searchable home page, quick links, and an Open in Safari button for passkey sign-in in Safari. Safari uses a separate session outside Secrét’s tunnel. Native in-app passkeys still require Apple’s browser entitlement.
 
+After extracting into Downloads, run on your Mac:
 xattr -dr com.apple.quarantine "$HOME/Downloads/Secrét.app"
 open "$HOME/Downloads/Secrét.app"
 
-Requires macOS 14 or later. Supports Apple Silicon and Intel. The preview is ad-hoc signed and not notarized. xattr does not override device management policies. The tunnel covers Secrét browsing only. Free Render hosting may take time to wake up.
+Requires macOS 14 or later. The preview is ad-hoc signed and not notarized. The tunnel covers Secrét browsing only.
