@@ -8,6 +8,7 @@ final class PointerSmoke: NSObject, WKNavigationDelegate {
     var window: NSWindow!
     var web: WKWebView!
     var approved = false
+    var captureCount = 0
     static func main() {
         let app = NSApplication.shared
         app.setActivationPolicy(.regular)
@@ -24,7 +25,15 @@ final class PointerSmoke: NSObject, WKNavigationDelegate {
         window.contentView = web
         web.navigationDelegate = self
         web.uiDelegate = delegate
-        delegate.approveMouseCapture = { _ in self.approved = true; return true }
+        delegate.approveMouseCapture = { view in
+            self.approved = MouseCaptureDelegate.isInteractiveSecurePage(view)
+            if self.approved { self.captureCount += 1 }
+            return self.approved
+        }
+        let backgroundView = WKWebView(frame: .zero)
+        guard !MouseCaptureDelegate.isInteractiveSecurePage(backgroundView) else {
+            fail("Background content was allowed to capture the mouse"); return
+        }
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         web.loadHTMLString("<html><body><canvas id='game' width='700' height='500'></canvas></body></html>", baseURL: URL(string: "https://pointer-test.invalid"))
@@ -45,7 +54,15 @@ final class PointerSmoke: NSObject, WKNavigationDelegate {
                         self.web.evaluateJavaScript("document.pointerLockElement === null") { unlocked, _ in
                             guard unlocked as? Bool == true else { self.fail("Pointer did not release"); return }
                             print("PASS: Native WebKit pointer lock released")
-                            exit(0)
+                            if self.captureCount == 1 {
+                                self.web.evaluateJavaScript("document.getElementById('game').requestPointerLock(); null") { _, error in
+                                    if let error = error { self.fail(error.localizedDescription); return }
+                                    self.checkLock(attempt: 0)
+                                }
+                            } else {
+                                print("PASS: Foreground HTTPS page reacquired pointer lock without a modal prompt")
+                                exit(0)
+                            }
                         }
                     }
                 }

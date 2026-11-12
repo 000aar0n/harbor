@@ -86,5 +86,5 @@ jobs:
           gh release create "build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" \
             dist/Secret-macOS.zip dist/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "Secrét 0.2.3 — build ${GITHUB_RUN_NUMBER}" \
+            --title "Secrét 0.2.4 — build ${GITHUB_RUN_NUMBER}" \
             --notes-file RELEASE_NOTES.md --latest

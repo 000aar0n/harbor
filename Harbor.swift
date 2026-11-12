@@ -18,15 +18,8 @@ final class Browser: MouseCaptureDelegate, NSApplicationDelegate, WKNavigationDe
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         approveMouseCapture = { [weak self] view in
-            guard let self = self, view === self.web, NSApp.isActive,
-                  view.window?.isKeyWindow == true, view.url?.scheme == "https",
-                  let host = view.url?.host else { return false }
-            let alert = NSAlert()
-            alert.messageText = "Allow mouse capture?"
-            alert.informativeText = "\(host) wants to capture the mouse for gameplay. The pointer will disappear. Press Escape to release it."
-            alert.addButton(withTitle: "Allow")
-            alert.addButton(withTitle: "Cancel")
-            return alert.runModal() == .alertFirstButtonReturn
+            guard let self = self, view === self.web else { return false }
+            return MouseCaptureDelegate.isInteractiveSecurePage(view)
         }
         mouseCaptureChanged = { [weak self] captured in
             self?.status.stringValue = captured ? "Mouse captured — press Esc to release" : "Mouse released"

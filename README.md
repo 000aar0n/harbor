@@ -52,6 +52,6 @@ Use the Safari button to open the current site in Safari for passkey sign-in. Sa
 
 ## Gaming and mouse capture
 
-WebKit fullscreen is enabled. On a secure game page, click the game and approve its mouse-capture request. WebKit handles cursor hiding and relative mouse movement; Escape releases capture. Authorization is implemented through WebKit’s non-public Objective-C delegate selectors, isolated in MouseCapture.swift; these selectors may change in future macOS releases. The Mac workflow tests actual pointer lock and unlock.
+WebKit fullscreen is enabled. On a secure game page, click the game. Mouse capture is authorized immediately while Secrét is active and its web window has focus; no modal permission dialog interrupts startup. WebKit handles cursor hiding and relative mouse movement; Escape releases capture. Authorization is implemented through WebKit’s non-public Objective-C delegate selectors, isolated in MouseCapture.swift; these selectors may change in future macOS releases. The Mac workflow tests actual pointer lock and unlock.
 
 GeForce NOW/Fortnite streaming has not been verified. Browser support and streaming transport are controlled by NVIDIA and WebKit. The Render browsing tunnel does not tunnel UDP/WebRTC game streams, so it cannot be treated as a gaming VPN.

@@ -1,13 +1,11 @@
-Secrét 0.2.3 fixes unreliable searches through the browsing tunnel by defaulting to Bing and adding a search-engine selector in the toolbar. Choose Bing, Google, or DuckDuckGo; your choice is saved for the next launch. Search providers may restrict shared server IP addresses; switch providers if one is unavailable.
+Secrét 0.2.4 removes the blocking mouse-capture prompt that could interrupt a game's Play/fullscreen flow. Active HTTPS pages can acquire and reacquire capture immediately. Background or insecure pages are rejected by the app policy; WebKit also enforces its user-activation and frame-origin rules. Escape releases capture.
 
-Download Secret-macOS.zip and replace the previous app with Secrét.app. Your tunnel connection file remains compatible.
+The Mac checks exercise the actual foreground-page policy and two consecutive capture/release cycles without a modal dialog. GeForce NOW/Fortnite gameplay itself is not verified.
 
-Adds a minimal black-and-green interface, a searchable home page, quick links, and an Open in Safari button for passkey sign-in in Safari. Safari uses a separate session outside Secrét’s tunnel. Native in-app passkeys still require Apple’s browser entitlement.
+Download Secret-macOS.zip and replace the previous app with Secrét.app. Your tunnel connection file remains compatible. The browsing tunnel does not cover UDP/WebRTC game streams.
 
 After extracting into Downloads, run on your Mac:
 xattr -dr com.apple.quarantine "$HOME/Downloads/Secrét.app"
 open "$HOME/Downloads/Secrét.app"
 
-Requires macOS 14 or later. The preview is ad-hoc signed and not notarized. The tunnel covers Secrét browsing only.
-
-Enables WebKit fullscreen and mouse capture for games. When a game asks, click Allow; press Escape to release the mouse. Pointer-lock authorization uses WebKit’s non-public delegate bridge and may vary by macOS release. GeForce NOW/Fortnite streaming itself has not been verified.
+Requires macOS 14 or later. The preview is ad-hoc signed and not notarized.

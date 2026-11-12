@@ -8,6 +8,13 @@ class MouseCaptureDelegate: NSObject, WKUIDelegate {
     var approveMouseCapture: ((WKWebView) -> Bool)?
     var mouseCaptureChanged: ((Bool) -> Void)?
 
+    // Authorize synchronously. Presenting a modal alert here moves keyboard
+    // focus away from the page in the middle of a game's Play/fullscreen flow.
+    // WebKit enforces its own user-activation and frame-origin restrictions.
+    static func isInteractiveSecurePage(_ webView: WKWebView) -> Bool {
+        NSApp.isActive && webView.window?.isKeyWindow == true && webView.url?.scheme == "https"
+    }
+
     @objc(_webViewDidRequestPointerLock:completionHandler:)
     func requestPointerLock(_ webView: WKWebView, completionHandler: @escaping (Bool) -> Void) {
         let allowed = approveMouseCapture?(webView) ?? false
