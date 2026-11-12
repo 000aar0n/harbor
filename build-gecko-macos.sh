@@ -51,7 +51,8 @@ tar -xzf "$stage/node.tar.gz" -C "$stage"
 mkdir -p "$resources/runtime/node/bin"
 cp "$stage/node-$node_version-darwin-arm64/bin/node" "$resources/runtime/node/bin/node"
 cp "$stage/node-$node_version-darwin-arm64/LICENSE" "$resources/licenses/Node-LICENSE.txt"
-codesign --force --sign - --timestamp=none "$resources/runtime/node/bin/node"
+codesign --verify --strict --verbose=2 "$resources/runtime/node/bin/node"
+"$resources/runtime/node/bin/node" -e 'console.log("PASS: Bundled Node runtime executes JavaScript")' 
 cp gecko/package.json gecko/package-lock.json gecko/backend.mjs gecko/home.html "$resources/gecko/"
 npm ci --prefix "$resources/gecko" --omit=dev --ignore-scripts
 iconset="$stage/AppIcon.iconset"
@@ -75,8 +76,8 @@ cat > "$app/Contents/Info.plist" <<'PLIST'
 <key>CFBundleDisplayName</key><string>eloter · Gecko edition</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.3.0</string>
-<key>CFBundleVersion</key><string>30</string>
+<key>CFBundleShortVersionString</key><string>0.3.1</string>
+<key>CFBundleVersion</key><string>31</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSHighResolutionCapable</key><true/>
 </dict></plist>

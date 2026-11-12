@@ -1,4 +1,4 @@
-eloter 0.3.0 changes the browser engine from WebKit to actual Gecko/Firefox and moves the browsing tunnel backend to Node.js.
+eloter 0.3.1 changes the browser engine from WebKit to actual Gecko/Firefox and moves the browsing tunnel backend to Node.js.
 
 Download eloter-Gecko-AppleSilicon.zip, extract it, and open eloter.app. The package includes the Firefox runtime and Node.js; no separate installation is required. First launch prepares the Mozilla-signed runtime in eloter's application-support folder. Firefox uses a separate private profile. Browsing uses Firefox's window and tabs; the eloter control panel provides direct/tunneled launch and connection setup. Existing Harbor-Connection.json files remain compatible.
 

@@ -127,7 +127,7 @@ async function worker() {
   const args = process.argv.slice(2);
   let firefox;
   const home = args[args.indexOf('--home') + 1];
-  let browser = null, proxy = null, profile = null, busy = false, quitting = false;
+  let browser = null, proxy = null, profile = null, busy = false, quitting = false, preparation;
   const emit = value => process.stdout.write(JSON.stringify(value) + '\n');
   async function stop() {
     const child = browser; browser = null;
@@ -150,7 +150,7 @@ async function worker() {
     try {
       if (line.length > 65536) throw Error('Invalid command');
       const command = JSON.parse(line);
-      if (command.command === 'quit') { quitting = true; await stop(); process.exit(0); }
+      if (command.command === 'quit') { await shutdown(); return; }
       if (command.command === 'stop') { await stop(); emit({type: 'stopped'}); }
       else if (command.command === 'launch') {
         await stop();
@@ -166,13 +166,15 @@ async function worker() {
     } catch (error) { await stop(); emit({type: 'error', message: error.message}); }
     finally { busy = false; }
   });
-  async function shutdown() { if (quitting) return; quitting = true; await stop(); process.exit(0); }
+  async function shutdown() { if (quitting) return; quitting = true; if (preparation) await preparation.catch(()=>{}); await stop(); process.exit(0); }
   input.once('close', shutdown);
   process.once('SIGTERM', shutdown);
   process.once('SIGINT', shutdown);
   try {
     emit({type:'preparing'});
-    firefox = await prepareFirefox(args);
+    preparation = prepareFirefox(args);
+    firefox = await preparation;
+    if (quitting) return;
     emit({type: 'ready', engine: 'Gecko/Firefox', backend: 'Node.js'});
   } catch(error) {
     emit({type:'error',message:'Gecko runtime setup failed: '+error.message});

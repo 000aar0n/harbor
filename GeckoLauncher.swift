@@ -111,7 +111,7 @@ final class GeckoLauncher: NSObject, NSApplicationDelegate {
             "--home", resources.appendingPathComponent("gecko/home.html").path]
         worker.standardInput = input
         worker.standardOutput = output
-        worker.standardError = FileHandle.nullDevice
+        worker.standardError = startupMarker == nil ? FileHandle.nullDevice : FileHandle.standardError
         output.fileHandleForReading.readabilityHandler = { [weak self] handle in
             let data = handle.availableData
             if data.isEmpty { handle.readabilityHandler = nil; return }
@@ -120,6 +120,10 @@ final class GeckoLauncher: NSObject, NSApplicationDelegate {
         worker.terminationHandler = { [weak self] _ in
             DispatchQueue.main.async {
                 self?.controls(enabled: false)
+                if self?.startupMarker != nil {
+                    fputs("Node backend stopped before startup completed\n", stderr)
+                    exit(1)
+                }
                 if self?.backendReportedError != true { self?.status.stringValue = "Backend stopped. Quit and reopen eloter." }
             }
         }
@@ -133,6 +137,7 @@ final class GeckoLauncher: NSObject, NSApplicationDelegate {
             let line = responseBuffer[..<end]
             responseBuffer.removeSubrange(...end)
             guard let value = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any], let type = value["type"] as? String else { continue }
+            if startupMarker != nil { fputs("Backend event: " + type + "\n", stderr) }
             switch type {
             case "preparing":
                 status.stringValue = "Preparing and verifying the Mozilla-signed Gecko runtime…"
@@ -141,7 +146,7 @@ final class GeckoLauncher: NSObject, NSApplicationDelegate {
                 status.stringValue = "Gecko and Node.js ready."
                 if let marker = startupMarker {
                     guard window.isVisible else { exit(1) }
-                    do { try "eloter Gecko control window and Node backend ready\n".write(to: marker, atomically: true, encoding: .utf8); NSApp.terminate(nil) }
+                    do { try "eloter Gecko control window and Node backend ready\n".write(to: marker, atomically: true, encoding: .utf8); startupMarker = nil; NSApp.terminate(nil) }
                     catch { exit(1) }
                 } else { launch(tunnel: false) }
             case "running":
@@ -155,6 +160,7 @@ final class GeckoLauncher: NSObject, NSApplicationDelegate {
                 backendReportedError = true
                 controls(enabled: true)
                 status.stringValue = value["message"] as? String ?? "Backend error"
+                if startupMarker != nil { fputs(status.stringValue + "\n", stderr); exit(1) }
             default: break
             }
         }
