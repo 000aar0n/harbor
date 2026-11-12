@@ -13,6 +13,7 @@ final class Browser: MouseCaptureDelegate, NSApplicationDelegate, WKNavigationDe
     let tunnelButton = NSButton(title: "Connect", target: nil, action: nil)
     var tunnel: HarborTunnel?
     var tunnelEnabled = false
+    var startupCheckURL: URL?
     var proxyHost = ""
     var proxyPort: UInt16 = 0
 
@@ -28,7 +29,7 @@ final class Browser: MouseCaptureDelegate, NSApplicationDelegate, WKNavigationDe
         let item = NSMenuItem()
         menu.addItem(item)
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "Quit Secrét", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "Quit goonson", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         item.submenu = appMenu
         let edit = NSMenuItem()
         menu.addItem(edit)
@@ -39,7 +40,7 @@ final class Browser: MouseCaptureDelegate, NSApplicationDelegate, WKNavigationDe
         edit.submenu = editMenu
         NSApp.mainMenu = menu
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1150, height: 780), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
-        window.title = "Secrét"
+        window.title = "goonson"
         window.minSize = NSSize(width: 1040, height: 500)
         window.appearance = NSAppearance(named: .darkAqua)
         window.backgroundColor = NSColor(calibratedWhite: 0.025, alpha: 1)
@@ -53,7 +54,7 @@ final class Browser: MouseCaptureDelegate, NSApplicationDelegate, WKNavigationDe
         window.contentView = root
         let toolbar = NSStackView()
         toolbar.spacing = 6
-        let brand = NSTextField(labelWithString: "secrét_")
+        let brand = NSTextField(labelWithString: "goonson_")
         brand.font = .monospacedSystemFont(ofSize: 16, weight: .bold)
         brand.textColor = NSColor(calibratedRed: 0.35, green: 0.95, blue: 0.48, alpha: 1)
         toolbar.addArrangedSubview(brand)
@@ -136,21 +137,21 @@ final class Browser: MouseCaptureDelegate, NSApplicationDelegate, WKNavigationDe
         let endpoint = engine == "Google" ? "https://www.google.com/search" : engine == "DuckDuckGo" ? "https://duckduckgo.com/" : "https://www.bing.com/search"
         let mode = tunnelEnabled ? "US tunnel enabled" : "Direct browsing"
         web.loadHTMLString("""
-        <!doctype html><html lang="en"><head><title>Secrét</title><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+        <!doctype html><html lang="en"><head><title>goonson</title><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
         <style>
         :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#080a08;color:#c4cec5;font:14px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.7}
         main{max-width:780px;margin:14vh auto;padding:32px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #263329;padding-bottom:18px;color:#82a689;font-size:12px}
         h1{font-size:48px;font-weight:500;letter-spacing:-3px;color:#75ee8b;margin:52px 0 4px}p{color:#839086;margin:0 0 32px}form{display:flex;align-items:center;border:1px solid #35523d;background:#0d130e;padding:6px 8px 6px 16px;gap:12px}label{color:#75ee8b}input{min-width:0;flex:1;background:transparent;color:#e2ebe3;border:0;padding:12px 0;font:inherit;outline:none}form:focus-within{border-color:#75ee8b}button{background:#17291b;color:#9cf3ac;border:1px solid #34553c;padding:10px 16px;font:inherit;cursor:pointer}button:hover{background:#23402a}nav{display:flex;gap:26px;padding:24px 0}a{color:#8eb597;text-decoration:none}a:hover{color:#a7ffb6;text-decoration:underline}footer{margin-top:72px;border-top:1px solid #263329;padding-top:18px;color:#5f7864;font-size:11px}input:focus-visible,button:focus-visible,a:focus-visible{outline:1px solid #75ee8b;outline-offset:4px}@media(max-width:600px){main{margin:8vh auto;padding:22px}h1{font-size:40px}header{gap:20px}button{padding:10px}}
         </style></head><body><main>
-        <header><span>secrét / browser</span><span>\(mode)</span></header>
-        <h1>secrét_</h1><p>A quiet place to search.</p>
+        <header><span>goonson / browser</span><span>\(mode)</span></header>
+        <h1>goonson_</h1><p>A quiet place to search.</p>
         <form action="\(endpoint)" method="get"><label for="q">&gt;</label><input id="q" name="q" type="search" placeholder="Search with \(engine)" aria-label="Search with \(engine)" required autocomplete="off"><button type="submit">Search ↵</button></form>
         <nav aria-label="Quick links"><a href="https://www.wikipedia.org/">Wikipedia ↗</a><a href="https://github.com/">GitHub ↗</a><a href="https://api.ipify.org/?format=json">Check IP ↗</a></nav>
         <footer>Connect in the toolbar to use your US browsing tunnel.</footer>
         </main></body></html>
         """, baseURL: nil)
         address.stringValue = ""
-        window.title = "Secrét"
+        window.title = "goonson"
     }
 
     @objc func openInSafari() {
@@ -160,7 +161,7 @@ final class Browser: MouseCaptureDelegate, NSApplicationDelegate, WKNavigationDe
         }
         let alert = NSAlert()
         alert.messageText = "Open this site in Safari?"
-        alert.informativeText = "Safari supports passkeys. This opens a separate browsing session outside Secrét’s tunnel."
+        alert.informativeText = "Safari supports passkeys. This opens a separate browsing session outside goonson’s tunnel."
         alert.addButton(withTitle: "Open in Safari")
         alert.addButton(withTitle: "Cancel")
         guard alert.runModal() == .alertFirstButtonReturn else { return }
@@ -201,7 +202,7 @@ final class Browser: MouseCaptureDelegate, NSApplicationDelegate, WKNavigationDe
 
     @objc func importTunnel() {
         let panel = NSOpenPanel()
-        panel.title = "Choose your Secrét connection file"
+        panel.title = "Choose your goonson connection file"
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
@@ -273,9 +274,25 @@ final class Browser: MouseCaptureDelegate, NSApplicationDelegate, WKNavigationDe
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         address.stringValue = webView.url?.absoluteString ?? ""
-        window.title = webView.title ?? "Secrét"
+        window.title = webView.title ?? "goonson"
+        if let marker = startupCheckURL {
+            startupCheckURL = nil
+            webView.evaluateJavaScript("document.querySelector('input[name=q]') !== null") { value, error in
+                guard error == nil, value as? Bool == true, self.window.isVisible else {
+                    fputs("Startup check failed: home window did not render\n", stderr)
+                    exit(1)
+                }
+                do {
+                    try "goonson home window rendered\n".write(to: marker, atomically: true, encoding: .utf8)
+                    NSApp.terminate(nil)
+                } catch {
+                    fputs("Startup check could not write its marker\n", stderr)
+                    exit(1)
+                }
+            }
+        }
         if tunnelEnabled, webView.url?.scheme == "https" {
-            status.stringValue = "Connected • United States • Secrét browsing only"
+            status.stringValue = "Connected • United States • goonson browsing only"
             if webView.url?.host == "api.ipify.org" {
                 webView.evaluateJavaScript("document.body.innerText") { value, _ in
                     guard self.tunnelEnabled, let text = value as? String,
@@ -310,9 +327,16 @@ struct HarborApplication {
             let browser = Browser()
             app.setActivationPolicy(.regular)
             app.delegate = browser
-            app.run()
+            if let index = CommandLine.arguments.firstIndex(of: "--startup-check"), index + 1 < CommandLine.arguments.count {
+                browser.startupCheckURL = URL(fileURLWithPath: CommandLine.arguments[index + 1])
+                DispatchQueue.main.asyncAfter(deadline: .now() + 20) {
+                    fputs("Startup check timed out\n", stderr)
+                    exit(1)
+                }
+            }
+            withExtendedLifetime(browser) { app.run() }
         } else {
-            print("Secrét requires macOS 14 or later.")
+            print("goonson requires macOS 14 or later.")
         }
     }
 }

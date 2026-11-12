@@ -12,7 +12,7 @@ fi
 mkdir -p build dist
 stage=$(mktemp -d "$PWD/build/package.XXXXXX")
 trap 'rm -rf "$stage"' EXIT
-app="$stage/Secrét.app"
+app="$stage/goonson.app"
 mkdir -p "$app/Contents/MacOS"
 sdk=$(xcrun --sdk macosx --show-sdk-path)
 for arch in arm64 x86_64; do
@@ -28,11 +28,11 @@ cat > "$app/Contents/Info.plist" <<'PLIST'
 <plist version="1.0"><dict>
 <key>CFBundleExecutable</key><string>Secret</string>
 <key>CFBundleIdentifier</key><string>local.harbor.browser</string>
-<key>CFBundleName</key><string>Secrét</string>
-<key>CFBundleDisplayName</key><string>Secrét</string>
+<key>CFBundleName</key><string>goonson</string>
+<key>CFBundleDisplayName</key><string>goonson</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.2.4</string>
-<key>CFBundleVersion</key><string>1</string>
+<key>CFBundleShortVersionString</key><string>0.2.5</string>
+<key>CFBundleVersion</key><string>5</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSHighResolutionCapable</key><true/>
 </dict></plist>
@@ -42,11 +42,11 @@ codesign --force --sign - --timestamp=none "$app"
 codesign --verify --deep --strict --verbose=2 "$app"
 test -s "$app/Contents/_CodeSignature/CodeResources"
 xcrun lipo "$app/Contents/MacOS/Secret" -verify_arch arm64 x86_64
-ditto -c -k --sequesterRsrc --keepParent "$app" "$stage/Secret-macOS.zip"
+ditto -c -k --sequesterRsrc --keepParent "$app" "$stage/goonson-macOS.zip"
 mkdir "$stage/unpacked"
-ditto -x -k "$stage/Secret-macOS.zip" "$stage/unpacked"
-codesign --verify --deep --strict --verbose=2 "$stage/unpacked/Secrét.app"
-test -s "$stage/unpacked/Secrét.app/Contents/_CodeSignature/CodeResources"
-mv "$stage/Secret-macOS.zip" dist/Secret-macOS.zip
-(cd dist && shasum -a 256 Secret-macOS.zip > SHA256SUMS)
-echo 'Built, signed, and verified the packaged app: dist/Secret-macOS.zip'
+ditto -x -k "$stage/goonson-macOS.zip" "$stage/unpacked"
+codesign --verify --deep --strict --verbose=2 "$stage/unpacked/goonson.app"
+test -s "$stage/unpacked/goonson.app/Contents/_CodeSignature/CodeResources"
+mv "$stage/goonson-macOS.zip" dist/goonson-macOS.zip
+(cd dist && shasum -a 256 goonson-macOS.zip > SHA256SUMS)
+echo 'Built, signed, and verified the packaged app: dist/goonson-macOS.zip'

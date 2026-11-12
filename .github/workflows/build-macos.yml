@@ -1,4 +1,4 @@
-name: Build Secrét for Mac
+name: Build goonson for Mac
 
 on:
   push:
@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-15-intel
+    runs-on: macos-26-intel
     timeout-minutes: 15
     permissions:
       contents: write
@@ -58,23 +58,15 @@ jobs:
         run: |
           set -euo pipefail
           smoke_dir=$(mktemp -d)
-          ditto -x -k dist/Secret-macOS.zip "$smoke_dir"
-          "$smoke_dir/Secrét.app/Contents/MacOS/Secret" > build/startup.log 2>&1 &
-          app_pid=$!
-          trap 'kill "$app_pid" 2>/dev/null || true; rm -rf "$smoke_dir"' EXIT
-          sleep 5
-          if ! kill -0 "$app_pid" 2>/dev/null; then
-            cat build/startup.log
-            echo 'Secrét exited during the startup check.' >&2
-            exit 1
-          fi
-          echo 'Secrét remained running through the startup check.'
+          ditto -x -k dist/goonson-macOS.zip "$smoke_dir"
+          trap 'rm -rf "$smoke_dir"' EXIT
+          bash tests/check-startup.sh "$smoke_dir/goonson.app"
       - name: Save build files
         uses: actions/upload-artifact@v4
         with:
-          name: Secret-macOS
+          name: goonson-macOS
           path: |
-            dist/Secret-macOS.zip
+            dist/goonson-macOS.zip
             dist/SHA256SUMS
           if-no-files-found: error
           retention-days: 7
@@ -84,7 +76,7 @@ jobs:
         shell: bash
         run: |
           gh release create "build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" \
-            dist/Secret-macOS.zip dist/SHA256SUMS \
+            dist/goonson-macOS.zip dist/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "Secrét 0.2.4 — build ${GITHUB_RUN_NUMBER}" \
+            --title "goonson 0.2.5 — build ${GITHUB_RUN_NUMBER}" \
             --notes-file RELEASE_NOTES.md --latest

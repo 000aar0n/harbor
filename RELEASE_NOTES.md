@@ -1,11 +1,7 @@
-Secrét 0.2.4 removes the blocking mouse-capture prompt that could interrupt a game's Play/fullscreen flow. Active HTTPS pages can acquire and reacquire capture immediately. Background or insecure pages are rejected by the app policy; WebKit also enforces its user-activation and frame-origin rules. Escape releases capture.
+goonson 0.2.5 renames the app, menus, home page, and download package. The application identity and existing tunnel setup remain compatible.
 
-The Mac checks exercise the actual foreground-page policy and two consecutive capture/release cycles without a modal dialog. GeForce NOW/Fortnite gameplay itself is not verified.
+Download goonson-macOS.zip, extract it, and open goonson.app.
 
-Download Secret-macOS.zip and replace the previous app with Secrét.app. Your tunnel connection file remains compatible. The browsing tunnel does not cover UDP/WebRTC game streams.
+Launch verification now checks that the actual home window renders, both when starting the executable and when opening the packaged app through LaunchServices. The application delegate is explicitly retained for the application lifetime. The release checks run on macOS 26 and build a universal executable for Intel and Apple Silicon.
 
-After extracting into Downloads, run on your Mac:
-xattr -dr com.apple.quarantine "$HOME/Downloads/Secrét.app"
-open "$HOME/Downloads/Secrét.app"
-
-Requires macOS 14 or later. The preview is ad-hoc signed and not notarized.
+This preview is ad-hoc signed and not notarized. Renaming does not change approval requirements on managed devices. Requires macOS 14 or later.
