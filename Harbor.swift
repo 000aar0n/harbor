@@ -3,7 +3,7 @@ import WebKit
 import Network
 
 @available(macOS 14.0, *)
-final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate {
+final class Browser: MouseCaptureDelegate, NSApplicationDelegate, WKNavigationDelegate {
     var window: NSWindow!
     var web: WKWebView!
     let address = NSTextField(string: "")
@@ -17,6 +17,20 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
     var proxyPort: UInt16 = 0
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        approveMouseCapture = { [weak self] view in
+            guard let self = self, view === self.web, NSApp.isActive,
+                  view.window?.isKeyWindow == true, view.url?.scheme == "https",
+                  let host = view.url?.host else { return false }
+            let alert = NSAlert()
+            alert.messageText = "Allow mouse capture?"
+            alert.informativeText = "\(host) wants to capture the mouse for gameplay. The pointer will disappear. Press Escape to release it."
+            alert.addButton(withTitle: "Allow")
+            alert.addButton(withTitle: "Cancel")
+            return alert.runModal() == .alertFirstButtonReturn
+        }
+        mouseCaptureChanged = { [weak self] captured in
+            self?.status.stringValue = captured ? "Mouse captured — press Esc to release" : "Mouse released"
+        }
         let menu = NSMenu()
         let item = NSMenuItem()
         menu.addItem(item)
@@ -101,6 +115,7 @@ final class Browser: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUI
         web?.stopLoading()
         web?.removeFromSuperview()
         let config = WKWebViewConfiguration()
+        config.preferences.isElementFullscreenEnabled = true
         let store = WKWebsiteDataStore.nonPersistent()
         if proxyPort != 0 {
             let endpoint = NWEndpoint.hostPort(host: .init(proxyHost), port: .init(rawValue: proxyPort)!)

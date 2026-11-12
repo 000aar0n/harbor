@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - Harbor.swift
+      - MouseCapture.swift
       - Tunnel.swift
       - TunnelSettings.swift
       - tests/**
@@ -47,6 +48,11 @@ jobs:
           done
           xcrun swiftc Tunnel.swift tests/TunnelSmoke.swift -framework Cocoa -framework WebKit -framework Network -o build/tunnel-smoke
           build/tunnel-smoke
+      - name: Test native pointer lock and release
+        shell: bash
+        run: |
+          xcrun swiftc MouseCapture.swift tests/PointerSmoke.swift -framework Cocoa -framework WebKit -o build/pointer-smoke
+          build/pointer-smoke
       - name: Check that the packaged app starts
         shell: bash
         run: |
@@ -80,5 +86,5 @@ jobs:
           gh release create "build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" \
             dist/Secret-macOS.zip dist/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "Secrét 0.2.2 — build ${GITHUB_RUN_NUMBER}" \
+            --title "Secrét 0.2.3 — build ${GITHUB_RUN_NUMBER}" \
             --notes-file RELEASE_NOTES.md --latest

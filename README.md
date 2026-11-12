@@ -49,3 +49,9 @@ This removes the downloaded app's quarantine attribute. It does not notarize the
 The current ad-hoc signed build cannot enable arbitrary-site passkeys inside WebKit. Apple requires an organization Apple Developer account and approval for `com.apple.developer.web-browser.public-key-credential`: https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.web-browser.public-key-credential
 
 Use the Safari button to open the current site in Safari for passkey sign-in. Safari uses its own session and is outside Secrét’s tunnel. This does not sign you into the site within Secrét.
+
+## Gaming and mouse capture
+
+WebKit fullscreen is enabled. On a secure game page, click the game and approve its mouse-capture request. WebKit handles cursor hiding and relative mouse movement; Escape releases capture. Authorization is implemented through WebKit’s non-public Objective-C delegate selectors, isolated in MouseCapture.swift; these selectors may change in future macOS releases. The Mac workflow tests actual pointer lock and unlock.
+
+GeForce NOW/Fortnite streaming has not been verified. Browser support and streaming transport are controlled by NVIDIA and WebKit. The Render browsing tunnel does not tunnel UDP/WebRTC game streams, so it cannot be treated as a gaming VPN.
