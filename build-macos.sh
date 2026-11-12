@@ -12,7 +12,7 @@ fi
 mkdir -p build dist
 stage=$(mktemp -d "$PWD/build/package.XXXXXX")
 trap 'rm -rf "$stage"' EXIT
-app="$stage/goonson.app"
+app="$stage/eloter.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 iconset="$stage/AppIcon.iconset"
 mkdir -p "$iconset"
@@ -35,12 +35,12 @@ cat > "$app/Contents/Info.plist" <<'PLIST'
 <plist version="1.0"><dict>
 <key>CFBundleExecutable</key><string>Secret</string>
 <key>CFBundleIdentifier</key><string>local.harbor.browser</string>
-<key>CFBundleName</key><string>goonson</string>
-<key>CFBundleDisplayName</key><string>goonson</string>
+<key>CFBundleName</key><string>eloter</string>
+<key>CFBundleDisplayName</key><string>eloter</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.2.7</string>
-<key>CFBundleVersion</key><string>7</string>
+<key>CFBundleShortVersionString</key><string>0.2.8</string>
+<key>CFBundleVersion</key><string>8</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSHighResolutionCapable</key><true/>
 </dict></plist>
@@ -50,12 +50,12 @@ codesign --force --sign - --timestamp=none "$app"
 codesign --verify --deep --strict --verbose=2 "$app"
 test -s "$app/Contents/_CodeSignature/CodeResources"
 xcrun lipo "$app/Contents/MacOS/Secret" -verify_arch arm64
-ditto -c -k --sequesterRsrc --keepParent "$app" "$stage/goonson-AppleSilicon.zip"
+ditto -c -k --sequesterRsrc --keepParent "$app" "$stage/eloter-AppleSilicon.zip"
 mkdir "$stage/unpacked"
-ditto -x -k "$stage/goonson-AppleSilicon.zip" "$stage/unpacked"
-codesign --verify --deep --strict --verbose=2 "$stage/unpacked/goonson.app"
-test -s "$stage/unpacked/goonson.app/Contents/_CodeSignature/CodeResources"
-test -s "$stage/unpacked/goonson.app/Contents/Resources/AppIcon.icns"
-mv "$stage/goonson-AppleSilicon.zip" dist/goonson-AppleSilicon.zip
-(cd dist && shasum -a 256 goonson-AppleSilicon.zip > SHA256SUMS)
-echo 'Built, signed, and verified the packaged app: dist/goonson-AppleSilicon.zip'
+ditto -x -k "$stage/eloter-AppleSilicon.zip" "$stage/unpacked"
+codesign --verify --deep --strict --verbose=2 "$stage/unpacked/eloter.app"
+test -s "$stage/unpacked/eloter.app/Contents/_CodeSignature/CodeResources"
+test -s "$stage/unpacked/eloter.app/Contents/Resources/AppIcon.icns"
+mv "$stage/eloter-AppleSilicon.zip" dist/eloter-AppleSilicon.zip
+(cd dist && shasum -a 256 eloter-AppleSilicon.zip > SHA256SUMS)
+echo 'Built, signed, and verified the packaged app: dist/eloter-AppleSilicon.zip'

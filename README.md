@@ -1,15 +1,15 @@
-# goonson
+# eloter
 
 A native Mac WebKit browser with an encrypted, authenticated US browsing tunnel. Requires macOS 14 or later; supports Apple Silicon.
 
 ## Use
 
-1. Download **goonson-AppleSilicon.zip** from [Releases](https://github.com/000aar0n/harbor/releases/latest), extract it, and open goonson.app.
-2. Click **Tunnel Setup…** and select your private **Harbor-Connection.json** file. goonson saves its access key in macOS Keychain. Keep this file private; it grants access to your server.
-3. Click **Connect**. goonson loads an IP-check page through the tunnel. The status displays your US browsing IP after a successful response.
+1. Download **eloter-AppleSilicon.zip** from [Releases](https://github.com/000aar0n/harbor/releases/latest), extract it, and open eloter.app.
+2. Click **Tunnel Setup…** and select your private **Harbor-Connection.json** file. eloter saves its access key in macOS Keychain. Keep this file private; it grants access to your server.
+3. Click **Connect**. eloter loads an IP-check page through the tunnel. The status displays your US browsing IP after a successful response.
 4. Browse normally. **Disconnect** explicitly returns to direct browsing and clears the session. Connecting, disconnecting, and importing settings clear session cookies and history.
 
-The tunnel covers HTTP CONNECT web traffic within goonson and upgrades HTTP navigations to HTTPS. It is not a system VPN, does not affect other applications, and does not provide country selection. It does not claim to tunnel arbitrary UDP or WebRTC traffic. Non-HTTPS sites may not work. WebKit direct proxy failover is disabled: an unavailable tunnel produces a browsing error. The button enables routing; the connected label appears only after a page loads through it.
+The tunnel covers HTTP CONNECT web traffic within eloter and upgrades HTTP navigations to HTTPS. It is not a system VPN, does not affect other applications, and does not provide country selection. It does not claim to tunnel arbitrary UDP or WebRTC traffic. Non-HTTPS sites may not work. WebKit direct proxy failover is disabled: an unavailable tunnel produces a browsing error. The button enables routing; the connected label appears only after a page loads through it.
 
 ## Search
 
@@ -35,11 +35,11 @@ This preview is ad-hoc signed, not notarized. Your Mac may require approval to r
 
 ## Opening the downloaded app with xattr
 
-After extracting goonson-AppleSilicon.zip in Downloads, run these commands in Terminal on your Mac:
+After extracting eloter-AppleSilicon.zip in Downloads, run these commands in Terminal on your Mac:
 
 ```sh
-xattr -dr com.apple.quarantine "$HOME/Downloads/goonson.app"
-open "$HOME/Downloads/goonson.app"
+xattr -dr com.apple.quarantine "$HOME/Downloads/eloter.app"
+open "$HOME/Downloads/eloter.app"
 ```
 
 This removes the downloaded app's quarantine attribute. It does not notarize the app or override device management policies. If you extracted it somewhere else, use that app's path instead. The existing Harbor connection file remains compatible.
@@ -48,11 +48,11 @@ This removes the downloaded app's quarantine attribute. It does not notarize the
 
 The current ad-hoc signed build cannot enable arbitrary-site passkeys inside WebKit. Apple requires an organization Apple Developer account and approval for `com.apple.developer.web-browser.public-key-credential`: https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.web-browser.public-key-credential
 
-Use the Safari button to open the current site in Safari for passkey sign-in. Safari uses its own session and is outside goonson’s tunnel. This does not sign you into the site within goonson.
+Use the Safari button to open the current site in Safari for passkey sign-in. Safari uses its own session and is outside eloter’s tunnel. This does not sign you into the site within eloter.
 
 ## Gaming and mouse capture
 
-WebKit fullscreen is enabled. On a secure game page, click the game. Mouse capture is authorized immediately while goonson is active and its web window has focus; no modal permission dialog interrupts startup. WebKit handles cursor hiding and relative mouse movement; Escape releases capture. Authorization is implemented through WebKit’s non-public Objective-C delegate selectors, isolated in MouseCapture.swift; these selectors may change in future macOS releases. The Mac workflow tests actual pointer lock and unlock.
+WebKit fullscreen is enabled. On a secure game page, click the game. Mouse capture is authorized immediately while eloter is active and its web window has focus; no modal permission dialog interrupts startup. WebKit handles cursor hiding and relative mouse movement; Escape releases capture. Authorization is implemented through WebKit’s non-public Objective-C delegate selectors, isolated in MouseCapture.swift; these selectors may change in future macOS releases. The Mac workflow tests actual pointer lock and unlock.
 
 GeForce NOW/Fortnite streaming has not been verified. Browser support and streaming transport are controlled by NVIDIA and WebKit. The Render browsing tunnel does not tunnel UDP/WebRTC game streams, so it cannot be treated as a gaming VPN.
 

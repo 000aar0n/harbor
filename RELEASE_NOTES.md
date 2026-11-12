@@ -1,5 +1,3 @@
-goonson 0.2.7 adds an original black-and-green compass app icon for Finder and the Dock. The icon is embedded at standard and Retina sizes and included in the signed package.
+eloter 0.2.8 renames the custom browser throughout the app, menus, home page, icon packaging, and Apple Silicon download. It retains the original black-and-green icon and application identifier. Existing tunnel setup files remain compatible.
 
-Download goonson-AppleSilicon.zip, extract it, and open goonson.app. This remains the custom student browser with its original application identifier. Existing tunnel connection files remain compatible.
-
-Apple Silicon only; requires macOS 14 or later. Launch, search, and pointer capture are checked on an Apple Silicon macOS 26 runner. The preview is ad-hoc signed and not notarized. Managed-device approval requirements remain unchanged.
+Download eloter-AppleSilicon.zip, extract it, and open eloter.app. Native arm64 only; requires macOS 14 or later. Launch, search-through-tunnel, and pointer capture/release checks run on an Apple Silicon macOS 26 runner. The preview is ad-hoc signed and not notarized; managed-device approval requirements remain unchanged.

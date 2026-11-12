@@ -1,4 +1,4 @@
-name: Build goonson for Mac
+name: Build eloter for Mac
 
 on:
   push:
@@ -59,15 +59,15 @@ jobs:
         run: |
           set -euo pipefail
           smoke_dir=$(mktemp -d)
-          ditto -x -k dist/goonson-AppleSilicon.zip "$smoke_dir"
+          ditto -x -k dist/eloter-AppleSilicon.zip "$smoke_dir"
           trap 'rm -rf "$smoke_dir"' EXIT
-          bash tests/check-startup.sh "$smoke_dir/goonson.app"
+          bash tests/check-startup.sh "$smoke_dir/eloter.app"
       - name: Save build files
         uses: actions/upload-artifact@v4
         with:
-          name: goonson-AppleSilicon
+          name: eloter-AppleSilicon
           path: |
-            dist/goonson-AppleSilicon.zip
+            dist/eloter-AppleSilicon.zip
             dist/SHA256SUMS
           if-no-files-found: error
           retention-days: 7
@@ -77,7 +77,7 @@ jobs:
         shell: bash
         run: |
           gh release create "build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" \
-            dist/goonson-AppleSilicon.zip dist/SHA256SUMS \
+            dist/eloter-AppleSilicon.zip dist/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "goonson 0.2.7 — build ${GITHUB_RUN_NUMBER}" \
+            --title "eloter 0.2.8 — build ${GITHUB_RUN_NUMBER}" \
             --notes-file RELEASE_NOTES.md --latest
