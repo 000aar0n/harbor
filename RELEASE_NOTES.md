@@ -4,4 +4,4 @@ Download eloter-Gecko-AppleSilicon.zip, extract it, and open eloter.app. The pac
 
 The native launcher and Node runtime are arm64. Mozilla's official Firefox Mac runtime includes native arm64. The download is substantially larger. Firefox retains its own signature and identity. The launcher is ad-hoc signed and not notarized; school/work management approval requirements remain unchanged.
 
-The web tunnel does not cover UDP/WebRTC game media. GeForce NOW/Fortnite compatibility and real passkey sign-in remain unverified. This release does not claim that changing engines resolves earlier unexplained system terminations.
+The web tunnel does not cover UDP/WebRTC game media. NVIDIA currently lists Firefox support for GeForce NOW on Windows only; macOS GeForce NOW/Fortnite compatibility and real passkey sign-in remain unverified. This release does not claim that changing engines resolves earlier unexplained system terminations.

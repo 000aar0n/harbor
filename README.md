@@ -19,11 +19,11 @@ The native arm64 launcher is Swift/AppKit. The JavaScript backend uses pinned `w
 
 The package includes official Firefox 160.0 and Node.js v26.13.1 downloads, verified against their official published checksums. Firefox's original application, license notices, and Developer ID signature are preserved in its official DMG. At first use it is copied to `~/Library/Application Support/eloter/GeckoRuntime` and verified against the original Apple-anchored Mozilla signing requirement. Running the copy outside the launcher bundle lets Firefox updates keep working without invalidating the launcher's signature. Node retains its upstream signature and JIT entitlements. Node and the launcher run natively on Apple Silicon; Mozilla's official Mac runtime is universal and includes native arm64.
 
-This download is substantially larger than the previous WebKit edition. Requires an Apple Silicon Mac; macOS 26 is tested. The launcher is ad-hoc signed and not notarized. Managed-device approval requirements are unchanged. An engine change does not establish the cause of earlier unexplained terminations.
+This download is substantially larger than the previous WebKit edition. Requires an Apple Silicon Mac; the release checks run on macOS 15. The launcher is ad-hoc signed and not notarized. Managed-device approval requirements are unchanged. An engine change does not establish the cause of earlier unexplained terminations.
 
 ## Limits
 
-The tunnel covers browser web traffic, not all device traffic or UDP/WebRTC media. Game streams may connect directly. GeForce NOW/Fortnite compatibility has **not** been verified; NVIDIA controls which browsers it supports. Firefox handles passkey availability and platform prompts; actual credential registration/sign-in has not been tested here.
+The tunnel covers browser web traffic, not all device traffic or UDP/WebRTC media. Game streams may connect directly. GeForce NOW/Fortnite compatibility has **not** been verified. NVIDIA currently lists Firefox support for GeForce NOW on Windows only: https://www.nvidia.com/en-us/geforce-now/system-reqs/. Firefox handles passkey availability and platform prompts; actual credential registration/sign-in has not been tested here.
 
 ## Build and checks
 
