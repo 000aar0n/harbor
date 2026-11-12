@@ -1,0 +1,58 @@
+name: Gecko Intel diagnostic (no release)
+on:
+  push:
+    branches: [codex/gecko-intel-diagnostic]
+    paths: [.github/workflows/gecko-intel-diagnostic.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: gecko-intel-diagnostic-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: macos-26-intel
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26.13.1'
+      - name: Test Node tunnel backend
+        run: |
+          npm ci --prefix gecko --omit=dev --ignore-scripts
+          npm --prefix gecko test
+      - name: Adapt this diagnostic workspace for Intel
+        run: |
+          python3 - <<'PYTEST'
+          from pathlib import Path
+          p=Path('build-gecko-macos.sh')
+          s=p.read_text().replace('[ "$(uname -m)" = arm64 ]','[ "$(uname -m)" = x86_64 ]').replace('darwin-arm64','darwin-x64').replace('-target arm64-apple-macos14.0','-target x86_64-apple-macos14.0')
+          p.write_text(s)
+          PYTEST
+      - name: Package Gecko runtime and Node backend
+        run: bash build-gecko-macos.sh
+      - name: Verify native control panel and backend startup
+        run: |
+          mkdir -p build/unpacked
+          ditto -x -k dist/eloter-Gecko-AppleSilicon.zip build/unpacked
+          bash tests/check-startup.sh "$PWD/build/unpacked/eloter.app"
+      - name: Test real Gecko engine, mouse capture, and Node tunnel
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv build/test-env
+          build/test-env/bin/pip install -r server/requirements.txt selenium==4.52.0
+          build/test-env/bin/python -m unittest discover -s tests -p test_server.py -v
+          curl -fL --retry 3 https://github.com/mozilla/geckodriver/releases/download/v0.37.1/geckodriver-v0.37.1-macos.tar.gz -o build/geckodriver.tar.gz
+          tar -xzf build/geckodriver.tar.gz -C build
+          HARBOR_TOKEN=test-only-token-not-a-real-secret-123456789 PORT=18765 build/test-env/bin/python server/tunnel.py > build/tunnel.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            if curl -fsS http://127.0.0.1:18765/health; then break; fi
+            sleep 1
+          done
+          build/test-env/bin/python tests/gecko-smoke.py "$PWD/build/unpacked/eloter.app"
