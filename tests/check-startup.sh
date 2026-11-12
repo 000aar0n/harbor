@@ -10,4 +10,4 @@ trap 'rm -rf "$check_dir"' EXIT
 test -s "$check_dir/direct-ready"
 open -n -W "$app_path" --args --startup-check "$check_dir/finder-ready"
 test -s "$check_dir/finder-ready"
-echo 'PASS: Packaged home window rendered through direct launch and LaunchServices'
+echo 'PASS: Gecko control panel and Node backend ready through direct launch and LaunchServices'

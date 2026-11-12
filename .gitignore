@@ -1,3 +1,6 @@
 /build/
 /dist/
 *.app/
+
+/gecko/node_modules/
+__pycache__/

@@ -1,0 +1,8 @@
+{
+  "name": "eloter-gecko-backend",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {"test": "node --test ../tests/gecko-backend.test.mjs"},
+  "dependencies": {"ws": "8.22.2"}
+}

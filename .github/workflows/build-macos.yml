@@ -1,45 +1,54 @@
-name: Build eloter for Mac
-
+name: Build eloter Gecko edition for Mac
 on:
   push:
     branches: [main]
     paths:
-      - assets/**
-      - Harbor.swift
-      - MouseCapture.swift
-      - Tunnel.swift
+      - GeckoLauncher.swift
       - TunnelSettings.swift
-      - tests/**
+      - gecko/**
+      - assets/**
       - server/**
-      - build-macos.sh
+      - tests/**
+      - build-gecko-macos.sh
       - RELEASE_NOTES.md
       - .github/workflows/build-macos.yml
   workflow_dispatch:
-
 permissions:
   contents: read
-
 concurrency:
   group: harbor-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   build:
     runs-on: macos-26
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Build and verify optimized Apple Silicon app
-        run: bash build-macos.sh
-      - name: Test encrypted browsing and blocked fallback
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26.13.1'
+      - name: Test Node tunnel backend
+        run: |
+          npm ci --prefix gecko --omit=dev --ignore-scripts
+          npm --prefix gecko test
+      - name: Package Gecko runtime and Node backend
+        run: bash build-gecko-macos.sh
+      - name: Verify native control panel and backend startup
+        run: |
+          mkdir -p build/unpacked
+          ditto -x -k dist/eloter-Gecko-AppleSilicon.zip build/unpacked
+          bash tests/check-startup.sh "$PWD/build/unpacked/eloter.app"
+      - name: Test real Gecko engine, mouse capture, and Node tunnel
         shell: bash
         run: |
           set -euo pipefail
           python3 -m venv build/test-env
-          build/test-env/bin/pip install -r server/requirements.txt
-          build/test-env/bin/python -m unittest discover -s tests -v
+          build/test-env/bin/pip install -r server/requirements.txt selenium==4.52.0
+          build/test-env/bin/python -m unittest discover -s tests -p test_server.py -v
+          curl -fL --retry 3 https://github.com/mozilla/geckodriver/releases/download/v0.37.1/geckodriver-v0.37.1-macos-aarch64.tar.gz -o build/geckodriver.tar.gz
+          tar -xzf build/geckodriver.tar.gz -C build
           HARBOR_TOKEN=test-only-token-not-a-real-secret-123456789 PORT=18765 build/test-env/bin/python server/tunnel.py > build/tunnel.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
@@ -47,37 +56,22 @@ jobs:
             if curl -fsS http://127.0.0.1:18765/health; then break; fi
             sleep 1
           done
-          xcrun swiftc Tunnel.swift tests/TunnelSmoke.swift -framework Cocoa -framework WebKit -framework Network -o build/tunnel-smoke
-          build/tunnel-smoke
-      - name: Test native pointer lock and release
-        shell: bash
-        run: |
-          xcrun swiftc MouseCapture.swift tests/PointerSmoke.swift -framework Cocoa -framework WebKit -o build/pointer-smoke
-          build/pointer-smoke
-      - name: Check that the packaged app starts
-        shell: bash
-        run: |
-          set -euo pipefail
-          smoke_dir=$(mktemp -d)
-          ditto -x -k dist/eloter-AppleSilicon.zip "$smoke_dir"
-          trap 'rm -rf "$smoke_dir"' EXIT
-          bash tests/check-startup.sh "$smoke_dir/eloter.app"
+          build/test-env/bin/python tests/gecko-smoke.py "$PWD/build/unpacked/eloter.app"
       - name: Save build files
         uses: actions/upload-artifact@v4
         with:
-          name: eloter-AppleSilicon
+          name: eloter-Gecko-AppleSilicon
           path: |
-            dist/eloter-AppleSilicon.zip
+            dist/eloter-Gecko-AppleSilicon.zip
             dist/SHA256SUMS
+          retention-days: 3
           if-no-files-found: error
-          retention-days: 7
       - name: Publish downloadable app
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: bash
         run: |
-          gh release create "build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" \
-            dist/eloter-AppleSilicon.zip dist/SHA256SUMS \
+          gh release create "gecko-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" \
+            dist/eloter-Gecko-AppleSilicon.zip dist/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "eloter 0.2.8 — build ${GITHUB_RUN_NUMBER}" \
+            --title "eloter 0.3.0 — Gecko + Node.js" \
             --notes-file RELEASE_NOTES.md --latest
