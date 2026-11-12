@@ -31,7 +31,7 @@ final class PointerSmoke: NSObject, WKNavigationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 30) { self.fail("Pointer lock timed out") }
     }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        webView.evaluateJavaScript("document.getElementById('game').requestPointerLock()") { _, error in
+        webView.evaluateJavaScript("document.getElementById('game').requestPointerLock(); null") { _, error in
             if let error = error { self.fail("Pointer request failed: " + error.localizedDescription) }
             self.checkLock(attempt: 0)
         }
@@ -40,7 +40,7 @@ final class PointerSmoke: NSObject, WKNavigationDelegate {
         web.evaluateJavaScript("document.pointerLockElement === document.getElementById('game')") { value, _ in
             if value as? Bool == true, self.approved {
                 print("PASS: Native WebKit pointer lock authorized and acquired")
-                self.web.evaluateJavaScript("document.exitPointerLock()") { _, _ in
+                self.web.evaluateJavaScript("document.exitPointerLock(); null") { _, _ in
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         self.web.evaluateJavaScript("document.pointerLockElement === null") { unlocked, _ in
                             guard unlocked as? Bool == true else { self.fail("Pointer did not release"); return }
