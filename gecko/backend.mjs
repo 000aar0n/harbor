@@ -98,7 +98,7 @@ export async function prepareFirefox(args) {
   const metadata = JSON.parse(await readFile(value('--runtime-metadata'), 'utf8'));
   const destination = path.join(cache, `Firefox-${metadata.version}.app`);
   const execute = promisify(execFile);
-  const validate = app => execute('/usr/bin/codesign', ['--verify','--deep','--strict','-R',metadata.requirement,app]);
+  const validate = app => execute('/usr/bin/codesign', ['--verify','--deep','--strict','-R='+metadata.requirement,app]);
   await mkdir(cache,{recursive:true});
   let exists = false;
   try { await access(destination); exists = true; } catch {}
