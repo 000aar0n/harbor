@@ -156,7 +156,7 @@ async function worker() {
         await stop();
         if (command.tunnel) proxy = await createTunnelProxy({endpoint: command.endpoint, token: command.token});
         profile = await makeProfile(proxy?.port);
-        const target = command.tunnel ? 'https://api.ipify.org/?format=json' : pathToFileURL(home).href;
+        const target = command.tunnel ? 'https://api.ipify.org/' : pathToFileURL(home).href;
         browser = spawn(firefox, ['-no-remote', '-profile', profile, '-new-window', target], {stdio: ['ignore', 'ignore', 'pipe']});
         browser.stderr.on('data', () => {}); // Never forward profile paths or browsing data.
         browser.once('error', error => { stop().then(() => emit({type: 'error', message: error.message})); });

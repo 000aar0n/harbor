@@ -1,4 +1,4 @@
-import json,os,pathlib,subprocess,sys,time
+import json,os,pathlib,subprocess,sys,time,ipaddress
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
@@ -56,9 +56,10 @@ try:
     proxy=subprocess.Popen([str(node),str(backend),'--proxy-only','ws://127.0.0.1:18765/tunnel','test-only-token-not-a-real-secret-123456789'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,env=env)
     port=json.loads(proxy.stdout.readline())['port']
     driver=browser(port)
-    driver.get('https://api.ipify.org/?format=json')
-    ip=json.loads(driver.find_element(By.TAG_NAME,'body').text)['ip']
-    assert ip
+    driver.get('https://api.ipify.org/')
+    ip=driver.find_element(By.TAG_NAME,'body').text.strip()
+    try: ipaddress.ip_address(ip)
+    except ValueError: raise AssertionError('Tunnel IP-check did not return an IP address: '+ip[:500])
     print('PASS: Gecko HTTPS browsing crossed the Node.js WebSocket tunnel; IP:',ip)
     proxy.terminate();proxy.wait(timeout=10);proxy=None
     blocked=False
