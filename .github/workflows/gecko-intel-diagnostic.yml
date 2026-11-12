@@ -1,4 +1,4 @@
-name: Gecko Intel diagnostic (no release)
+name: Gecko Intel diagnostic (updated source, no release)
 on:
   push:
     branches: [codex/gecko-intel-diagnostic]
