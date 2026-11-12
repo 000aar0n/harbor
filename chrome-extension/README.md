@@ -1,6 +1,6 @@
 # eloter for Chrome
 
-A clearly branded Manifest V3 extension plus a Node.js companion for the existing authenticated Render WebSocket tunnel. No replacement browser, Apple Silicon binary, or xattr command is needed. Node.js 22+ works on Apple Silicon and Intel; the extension uses your installed Chrome engine.
+A clearly branded Manifest V3 extension plus a Node.js companion for the existing authenticated Render WebSocket tunnel. No replacement browser, Apple Silicon binary, or xattr command is needed. Node.js 24.5+ works on Apple Silicon and Intel; the extension uses your installed Chrome engine.
 
 ## Quick start
 
@@ -8,7 +8,7 @@ Use only where Chrome extensions, Node, and your tunnel are permitted. Managed-d
 
 1. Extract `eloter-Chrome.zip` completely. Keep its `extension` and `companion` folders.
 2. In Chrome, open `chrome://extensions`. If developer extensions are permitted, enable Developer mode, choose **Load unpacked**, and select the extracted **extension** folder. Do not select the ZIP or its parent folder. Pin **eloter tunnel** using Chrome's Extensions menu.
-3. Install an approved Node.js 22+ runtime from https://nodejs.org if you do not already have it. The download includes the pinned `ws` dependency, so no npm installation is required for the release ZIP.
+3. Install an approved Node.js 24.5+ runtime from https://nodejs.org if you do not already have it. The download includes the pinned `ws` dependency, so no npm installation is required for the release ZIP.
 4. Open Terminal in the extracted **companion** folder. Run:
 
    ```sh

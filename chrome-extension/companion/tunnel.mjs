@@ -1,4 +1,5 @@
 import net from 'node:net';
+import https from 'node:https';
 import {WebSocket, createWebSocketStream} from 'ws';
 
 export async function createTunnelProxy({endpoint, token, port = 0, allowLocalTest = false}) {
@@ -6,6 +7,8 @@ export async function createTunnelProxy({endpoint, token, port = 0, allowLocalTe
   const local = allowLocalTest && url.protocol === 'ws:' && url.hostname === '127.0.0.1';
   if ((!local && url.protocol !== 'wss:') || url.pathname !== '/tunnel' || url.username || url.password || url.search || url.hash || typeof token !== 'string' || token.length < 32 || /[\r\n]/.test(token)) throw Error('Invalid tunnel configuration');
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw Error('Invalid listening port');
+  // Honor the machine's configured upstream HTTP(S) proxy on supported Node releases.
+  const agent = url.protocol === 'wss:' ? new https.Agent({proxyEnv:process.env}) : undefined;
   const clients = new Set();
   const server = net.createServer(socket => {
     clients.add(socket);
@@ -47,7 +50,7 @@ export async function createTunnelProxy({endpoint, token, port = 0, allowLocalTe
           if (lengths.length > 1 || transfers.length > 1 || (lengths.length && transfers.length) || lengths.some(([,v])=>!/^\d+$/.test(v)) || transfers.some(([,v])=>v.toLowerCase() !== 'chunked')) throw Error('Ambiguous framing');
           prefix = Buffer.from(`${method} ${target.pathname}${target.search} HTTP/1.1\r\nHost: ${target.host}\r\n${pairs.filter(([k])=>!stripped.has(k)).map(([k,v])=>`${k}: ${v}\r\n`).join('')}Connection: close\r\n\r\n`, 'latin1');
         }
-        ws = new WebSocket(url, {headers:{Authorization:'Bearer '+token}, handshakeTimeout:55000, perMessageDeflate:false});
+        ws = new WebSocket(url, {headers:{Authorization:'Bearer '+token}, handshakeTimeout:55000, perMessageDeflate:false, agent});
         ws.on('error', () => socket.destroy());
         ws.on('close', () => {if (!socket.destroyed) socket.end();});
         ws.on('open', () => ws.send(JSON.stringify({host:target.hostname.replace(/^\[|\]$/g,''), port:destinationPort})));
@@ -69,6 +72,7 @@ export async function createTunnelProxy({endpoint, token, port = 0, allowLocalTe
   await new Promise((resolve,reject) => {server.once('error', reject); server.listen(port,'127.0.0.1',resolve);});
   return {port:server.address().port, close:async()=>{
     for (const client of clients) client.destroy();
+    agent?.destroy();
     await new Promise(resolve=>server.close(resolve));
   }};
 }

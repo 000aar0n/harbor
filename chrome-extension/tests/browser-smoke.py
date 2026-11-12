@@ -5,7 +5,7 @@ fixture=subprocess.Popen(['node',str(root/'tests/browser-fixture.mjs')],stdout=s
 try:
     assert fixture.stdout.readline().strip()=='ready'
     with tempfile.TemporaryDirectory(prefix='eloter-chrome-test-') as profile, sync_playwright() as p:
-        context=p.chromium.launch_persistent_context(profile,executable_path=os.environ.get('CHROME_BIN'),headless=True,ignore_default_args=['--disable-extensions'],args=['--no-sandbox','--disable-extensions-except='+str(root/'extension'),'--load-extension='+str(root/'extension')])
+        context=p.chromium.launch_persistent_context(profile,executable_path=os.environ.get('CHROME_BIN'),headless=True,channel='chromium',ignore_default_args=['--disable-extensions'],args=['--no-sandbox','--disable-extensions-except='+str(root/'extension'),'--load-extension='+str(root/'extension')])
         try:
             worker=context.service_workers[0] if context.service_workers else context.wait_for_event('serviceworker',timeout=20000)
             extension_id=worker.url.split('/')[2]
