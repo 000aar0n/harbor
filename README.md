@@ -59,3 +59,7 @@ GeForce NOW/Fortnite streaming has not been verified. Browser support and stream
 ## Apple Silicon build
 
 The current download is arm64 only for Apple Silicon Macs (M-series). It runs natively, without Rosetta, and omits the Intel executable slice. Release compilation uses `-O -whole-module-optimization` and linker dead stripping. Launch, browsing, and pointer-lock checks run on an Apple Silicon macOS 26 runner. This is a smaller native package; no benchmarked speedup is claimed.
+
+## App icon
+
+The app uses an original black-and-green compass icon. The build converts the 1024-pixel source in assets/AppIcon.jpg into a macOS icon set covering standard and Retina sizes, embeds AppIcon.icns, and signs it with the app.

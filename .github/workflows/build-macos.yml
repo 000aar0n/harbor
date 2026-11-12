@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - assets/**
       - Harbor.swift
       - MouseCapture.swift
       - Tunnel.swift
@@ -78,5 +79,5 @@ jobs:
           gh release create "build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" \
             dist/goonson-AppleSilicon.zip dist/SHA256SUMS \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "goonson 0.2.6 — build ${GITHUB_RUN_NUMBER}" \
+            --title "goonson 0.2.7 — build ${GITHUB_RUN_NUMBER}" \
             --notes-file RELEASE_NOTES.md --latest
